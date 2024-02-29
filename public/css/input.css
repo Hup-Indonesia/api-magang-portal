@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #222;
+  font-family: "Inconsolata", monospace;
+}
+.overlay {
+  background-color: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(150px);
+}
+.overlay-tale {
+  background-color: rgba(61, 209, 219, 0.08);
+}
+.font-second {
+  font-family: "Manrope", sans-serif;
+}
+.porto {
+  border: 1px solid #3d3d3d;
+  background-color: #222;
+  border-radius: 8px;
+}
+.selected {
+  font-weight: bold;
+  color: white;
+}
+
+.popup-text-header {
+    @apply font-normal text-white text-base tracking-[1.6px] flex items-center gap-2;
+}
+.popup-close {
+    @apply cursor-pointer font-second font-medium text-sm text-teal-100;
+}
+.popup-header {
+    @apply bg-header rounded-t-2xl flex justify-between px-5 py-3 items-center;
+}
+.popup-body{
+    @apply divide-y divide-header bg-body rounded-b-2xl max-h-[500px] overflow-y-scroll
+}
+.text-head{
+    @apply font-bold text-lg text-white mb-2
+}
+.text-body{
+    @apply text-white-60 font-second text-sm font-medium mb-3
+}
+.label{
+    @apply text-white-60 tracking-[1.4px] font-normal text-sm
+}
+.input{
+    @apply block px-3 py-[10px] bg-header rounded-lg text-sm placeholder-white-60 text-white font-second
+    focus:outline-none focus:border-white-60 focus:ring-1 focus:ring-white-60
+    focus:invalid:border-red-500 focus:invalid:ring-red-500 border-none
+}
+
+.applicants-grid{
+  @apply grid grid-cols-[.2fr_.2fr_1fr_1fr_.6fr_1fr_.75fr_.5fr] gap-4
+}
+.jobpost-grid{
+  @apply grid grid-cols-[.2fr_1fr_1fr_.6fr_.6fr_.6fr_.4fr_.4fr_.4fr] gap-4
+}
+.recruiter-grid{
+  @apply grid grid-cols-[.2fr_1fr_.5fr_.5fr_.5fr_.8fr_.4fr_.4fr_.4fr] gap-4
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+input[type=date]::-webkit-calendar-picker-indicator, input[type=month]::-webkit-calendar-picker-indicator{
+  cursor: pointer;
+  background: url('/img/Calendar.svg') no-repeat;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  background: url('/img/Clock.svg') no-repeat;
+}
+
+.applied-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: -1; /* Memastikan lapisan hitam berada di belakang elemen */
+}
+
+div::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Track */
+div::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Handle */
+div::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+/* Handle on hover */
+div::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.no-scroll{
+  overflow: hidden;
+}

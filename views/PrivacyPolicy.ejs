@@ -1,0 +1,124 @@
+<%- include('./layouts/header'); -%>
+
+<section id="navbar" class="relative text-white py-2.5 w-full overlay sticky top-0">
+    <div class="flex justify-between items-center px-5 lg:px-0 lg:w-[1036px] m-auto">
+        <div class="left flex items-center">
+            <div class="brand">
+                <a href="/">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="70" height="33" viewBox="0 0 70 33" fill="none">
+                    <g clip-path="url(#clip0_14_24)">
+                    <path d="M42.3998 9.84899L41.1918 27.203L35.9716 26.8363L35.4603 23.8813C33.5053 25.9427 31.276 26.8855 28.7723 26.7097C27.8709 26.6464 27.0284 26.4608 26.2448 26.153C25.4861 25.847 24.9231 25.441 24.5558 24.935C24.3497 24.6425 24.2226 23.9385 24.1745 22.8231C24.1514 21.7095 24.2186 20.0208 24.3762 17.7573L25.0117 8.62757L31.4336 9.07868L30.8034 18.1329C30.7684 18.6359 30.7397 19.2279 30.7175 19.9087C30.6953 20.5895 30.7406 21.0224 30.8536 21.2072C31.0113 21.471 31.5033 21.632 32.3295 21.69L32.933 21.6945C33.6358 21.7186 34.3732 21.6061 35.1454 21.357L35.9778 9.39788L42.3998 9.84899Z" fill="white"/>
+                    <path d="M55.8706 10.4161C57.6733 10.5428 59.0583 11.2466 60.0259 12.5277C61.0202 13.7854 61.414 15.8982 61.2074 18.866C61.0534 21.0792 60.7145 22.8751 60.1908 24.2537C59.6689 25.6071 59.1168 26.4908 58.5345 26.9048C57.9521 27.3188 56.9628 27.6158 55.5665 27.7957C54.1953 27.9774 52.7836 28.0172 51.3314 27.9152C50.9058 27.8853 50.194 27.8101 49.196 27.6894L48.8231 33.0465L42.3828 32.8595L43.9768 9.95977L49.2346 10.3291L49.6866 13.0525C50.4023 12.1676 51.2802 11.4837 52.3202 11.0008C53.3852 10.5196 54.5687 10.3247 55.8706 10.4161ZM53.4545 23.4393C53.7439 23.2574 53.9836 22.7056 54.1736 21.7838C54.3653 20.8369 54.4909 19.9359 54.5504 19.0807C54.6485 17.6723 54.5459 16.6162 54.2426 15.9125C53.9394 15.2088 53.262 14.8201 52.2104 14.7462C51.4593 14.6934 50.753 14.7196 50.0916 14.8248L49.5086 23.2L50.5522 23.3871C50.876 23.4351 51.3383 23.4802 51.9391 23.5224C52.7904 23.5822 53.2955 23.5545 53.4545 23.4393Z" fill="white"/>
+                    <path d="M63.1179 20.1754C63.2114 18.1095 63.3268 13.9222 63.464 7.61341L63.5326 5.00239L69.6402 5.09023C69.6302 5.595 69.591 6.33782 69.5228 7.3187C69.3407 9.93438 69.0002 13.0191 68.5012 16.5729C68.289 18.1755 68.1546 19.2023 68.0981 19.6533C66.849 20.2479 65.2472 20.4892 63.2926 20.3772L63.1179 20.1754ZM64.8746 29.094C64.0484 29.036 63.3783 28.7236 62.8642 28.1567C62.377 27.5664 62.1657 26.806 62.2305 25.8755C62.2865 25.0706 62.6092 24.4109 63.1986 23.8963C63.8129 23.3834 64.5332 23.156 65.3594 23.214C66.1606 23.2703 66.8048 23.5936 67.2921 24.1838C67.8044 24.7758 68.0325 25.4743 67.9765 26.2791C67.9117 27.2097 67.5972 27.9331 67.0329 28.4495C66.4704 28.9408 65.7509 29.1556 64.8746 29.094Z" fill="white"/>
+                    <path d="M2.31979 0.837579L9.75458 1.35983L9.15426 9.98378L8.82395 14.729L8.11735 24.8797L0.682567 24.3574L2.31979 0.837579Z" fill="white"/>
+                    <path d="M15.5211 10.431L16.1214 1.80707L23.5562 2.32932L21.9189 25.8492L14.4842 25.3269L15.1908 15.1762L15.5211 10.431Z" fill="white"/>
+                    <path d="M14.7714 12.7728C14.7714 14.2413 13.5863 15.7273 12.1244 15.7273C10.6624 15.7273 9.47729 14.2413 9.47729 12.7728C9.47729 11.3042 10.6624 9.96594 12.1244 9.96594C13.5863 9.96594 14.7714 11.3042 14.7714 12.7728Z" fill="white"/>
+                    </g>
+                    <defs>
+                    <clipPath id="clip0_14_24">
+                        <rect width="70" height="33" fill="white"/>
+                    </clipPath>
+                    </defs>
+                </svg>
+                </a>
+            </div>
+        </div>
+        <div id="burger" class="lg:hidden">
+            <svg class="burger-button" width="22" height="14" viewBox="0 0 22 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1.66667 14C1.33611 14 1.05903 13.8882 0.835417 13.6646C0.611806 13.441 0.5 13.1639 0.5 12.8333C0.5 12.5028 0.611806 12.2257 0.835417 12.0021C1.05903 11.7785 1.33611 11.6667 1.66667 11.6667H20.3333C20.6639 11.6667 20.941 11.7785 21.1646 12.0021C21.3882 12.2257 21.5 12.5028 21.5 12.8333C21.5 13.1639 21.3882 13.441 21.1646 13.6646C20.941 13.8882 20.6639 14 20.3333 14H1.66667ZM1.66667 8.16667C1.33611 8.16667 1.05903 8.05486 0.835417 7.83125C0.611806 7.60764 0.5 7.33056 0.5 7C0.5 6.66944 0.611806 6.39236 0.835417 6.16875C1.05903 5.94514 1.33611 5.83333 1.66667 5.83333H20.3333C20.6639 5.83333 20.941 5.94514 21.1646 6.16875C21.3882 6.39236 21.5 6.66944 21.5 7C21.5 7.33056 21.3882 7.60764 21.1646 7.83125C20.941 8.05486 20.6639 8.16667 20.3333 8.16667H1.66667ZM1.66667 2.33333C1.33611 2.33333 1.05903 2.22153 0.835417 1.99792C0.611806 1.77431 0.5 1.49722 0.5 1.16667C0.5 0.836111 0.611806 0.559028 0.835417 0.335417C1.05903 0.111806 1.33611 0 1.66667 0H20.3333C20.6639 0 20.941 0.111806 21.1646 0.335417C21.3882 0.559028 21.5 0.836111 21.5 1.16667C21.5 1.49722 21.3882 1.77431 21.1646 1.99792C20.941 2.22153 20.6639 2.33333 20.3333 2.33333H1.66667Z" fill="white"/>
+            </svg>
+            <svg class="burger-button hidden" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 9.63339L2.28333 15.3501C2.06944 15.5639 1.79722 15.6709 1.46666 15.6709C1.13611 15.6709 0.863885 15.5639 0.649996 15.3501C0.436107 15.1362 0.329163 14.8639 0.329163 14.5334C0.329163 14.2028 0.436107 13.9306 0.649996 13.7167L6.36666 8.00006L0.649996 2.28339C0.436107 2.0695 0.329163 1.79728 0.329163 1.46672C0.329163 1.13617 0.436107 0.863946 0.649996 0.650057C0.863885 0.436168 1.13611 0.329224 1.46666 0.329224C1.79722 0.329224 2.06944 0.436168 2.28333 0.650057L8 6.36672L13.7167 0.650057C13.9306 0.436168 14.2028 0.329224 14.5333 0.329224C14.8639 0.329224 15.1361 0.436168 15.35 0.650057C15.5639 0.863946 15.6708 1.13617 15.6708 1.46672C15.6708 1.79728 15.5639 2.0695 15.35 2.28339L9.63333 8.00006L15.35 13.7167C15.5639 13.9306 15.6708 14.2028 15.6708 14.5334C15.6708 14.8639 15.5639 15.1362 15.35 15.3501C15.1361 15.5639 14.8639 15.6709 14.5333 15.6709C14.2028 15.6709 13.9306 15.5639 13.7167 15.3501L8 9.63339Z" fill="white"/>
+            </svg>                                      
+        </div>
+        <a id="button-login" href="https://hup.co.id/" class="hidden lg:block py-2 px-10 bg-white font-second text-base font-medium text-[#000]/80 rounded-lg">
+            Kunjungi Website
+        </a>
+    </div>
+    <div id="burger-nav" class="hidden bg-[#303030] w-full absolute top-[3.3rem] left-0 right-0 pt-5 pb-8 px-5 rounded-b-2xl">
+        <a href="https://hup.co.id/" class="">
+            <button class="lg:block py-4 px-10 w-full bg-white font-second text-base font-medium text-[#000]/80 rounded-lg">Kunjungi Website</button>
+        </a>
+    </div>
+</section>
+
+<section class="bg-no-repeat min-h-screen">
+    <div class="bg-card-grey py-10 pb-11.5 ">
+        <div class="w-[1036px] m-auto">
+            <p class="text-white font-extrabold text-[32px]">Privacy Policy</p>
+        </div>
+    </div>
+    <div class="w-[1036px] m-auto mt-10">
+        <div class="mt-6">
+            <p class="text-white-80 font-extrabold text-[20px]">1. Introductons</p>
+            <p class="ms-8 mt-3 text-white-60">The following Privacy Policy (“Privacy Policy”) describes how Hup! (“We”) respect and protect every personal data owned by user or visitor (“You”) who access Our site (www.hup.co.id) or any other digital service(s) provided and managed by Us (“Platform”).</p>
+            <p class="ms-8 mt-3 text-white-60">By using Platform, You (and/or Your parent or legal guardian if You are under 18 years old) agree that You have read and accepted this Privacy Policy which is an integral part of Our Terms and Conditions of Use (“Terms of Use”). You hereby ensure and guarantee that any data provided is valid and correct, and You have the right to provide Us with the data. If necessary and reasonably requested, You agree to provide any proof about the data validity and accuracy. In case of any change in data supplied to Us, You must update Your data by sending a request to Us. You also give permission for Us to collect, use, display, announce, disclose, process, open access, store, send, give, assign, manage, destroy, and protect (“Use”) your data for certain purpose(s) in this Privacy Policy and Terms of Use.</p>
+            <p class="ms-8 mt-3 text-white-60">By giving permission, You agree to release Your right for any claim, losses, dispute, or lawsuit that might occur over the Use of Your data in Our system.</p>
+        </div>
+        <div class="mt-6">
+            <p class="text-white-80 font-extrabold text-[20px]">2. Information We Collect</p>
+            <div class="ms-8">
+                <p  class="mt-5 text-white-80 font-extrabold">2.1. Data obtained from You:</p>
+                <p class="mt-3 text-white-60">Is data provided by You when filing out electronic form or corresponding with Us, including but not limited to when You:</p>
+                <p class="mt-3 text-white-60">a. Create an account in Our Platform;</p>
+                <p class="mt-3 text-white-60">b. Subscribe to any kind of service in Our Platform;</p>
+                <p class="mt-3 text-white-60">c. Contacting Us, whether by phone, email, website, or other contact details stated in this Privacy Policy;</p>
+                <p class="mt-3 text-white-60">d. Filling out any survey; and</p>
+                <p class="mt-3 text-white-60">e. Using Platform services, such as applying to job posts or any service that needs access to Your data.</p>
+                <p class="mt-3 text-white-60">Data that You submitted in those activities may include username, email, password, phone number, address, personal description, picture, educational background information, previous work experience, transaction detail, and other data related to the activities above.</p>
+            </div>
+            <div class="ms-8">
+                <p  class="mt-5 text-white-80 font-extrabold">2.2. Recorded data:</p>
+                <p class="mt-3 text-white-60">Is data that will be collected by Us when You access the Platform, which including but not limited to:</p>
+                <p class="mt-3 text-white-60">a. Technical information, including IP Address, login information, type and version of the browser used, timezone, real-time geo location; and</p>
+                <p class="mt-3 text-white-60">b. Visitation info, including the time of your activities on the Platform, complete list of URLs visited, log or data records, product that You have seen or searched on the Platform, transaction data, and phone number or email address You used to contact Our team.</p>
+            </div>
+            <div class="ms-8">
+                <p  class="mt-5 text-white-80 font-extrabold">2.3. Obtained data from other sources:</p>
+                <p class="mt-3 text-white-60">Is data collected from third parties, such as our partner who helps Us to develop Our service for You, financial service provider, and other public data source.</p>
+            </div>
+        </div>
+        <div class="mt-6">
+            <p class="text-white-80 font-extrabold text-[20px]">3. How We Use Your Information</p>
+            <p class="ms-8 mt-3 text-white-60">We may utilize or amalgamate the acquired data for the following purposes:</p>
+            <p class="ms-8 mt-3 text-white-60">a. Making every reasonable effort to fulfill our obligation to provide you with information, products, and services on our platform;</p>
+            <p class="ms-8 mt-3 text-white-60">b. Ensuring that the platform is presented in the most effective way for you;</p>
+            <p class="ms-8 mt-3 text-white-60">c. Managing, contacting, and assisting you in resolving any inconvenience, transaction problem, or other difficulties during your access or usage on the platform;</p>
+            <p class="ms-8 mt-3 text-white-60">d. Improving our platform service(s);</p>
+            <p class="ms-8 mt-3 text-white-60">e. Providing recommendations or information about workshops, competitions, promotions, or any other relevant information for you;</p>
+            <p class="ms-8 mt-3 text-white-60">f. Monitoring or investigating any transactions or other suspicious activities that allegedly violate the Terms of Use or applicable laws; and</p>
+            <p class="ms-8 mt-3 text-white-60">g. Pursuing other purposes that will be communicated to you by us and in accordance with applicable laws.</p>
+        </div>
+        <div class="mt-6">
+            <p class="text-white-80 font-extrabold text-[20px]">4. Information Sharing</p>
+            <div class="ms-8">
+                <p  class="mt-5 text-white-80 font-extrabold">4.1. Third-Party Services:</p>
+                <p class="mt-3 text-white-60">We may share your information with third-party service providers to facilitate our services.</p>
+            </div>
+        </div>
+        <div class="mt-6">
+            <p class="text-white-80 font-extrabold text-[20px]">5. Security</p>
+            <div class="ms-8">
+                <p  class="mt-5 text-white-80 font-extrabold">5.1. Security Measures:</p>
+                <p class="mt-3 text-white-60">We implement security measures to protect your information, but no method is entirely secure.</p>
+            </div>
+        </div>
+        <div class="mt-6">
+            <p class="text-white-80 font-extrabold text-[20px]">6. Changes to the Privacy Policy</p>
+            <div class="ms-8">
+                <p  class="mt-5 text-white-80 font-extrabold">6.1. Ownership:</p>
+                <p class="mt-3 text-white-60">We reserve the right to update our Privacy Policy, and any changes will be posted on our platform.</p>
+            </div>
+        </div>
+        <div class="mt-6 mb-16">
+            <p class="text-white-80 font-extrabold text-[20px]">7. Contact Information</p>
+            <div class="ms-8">
+                <p  class="mt-5 text-white-80 font-extrabold">7.1. Contact Us:</p>
+                <p class="mt-3 text-white-60">For questions or concerns regarding our Terms and Conditions or Privacy Policy, please contact us at hello@hup.co.id.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- include('./layouts/footer'); -%>
+<script src="/js/Burger.js"></script>
