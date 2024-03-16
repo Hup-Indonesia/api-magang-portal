@@ -109,7 +109,7 @@ import verificationRouter from "./router/verification.router";
 import superRouter from "./router/super.router";
 import authRouter from "./router/auth.router"
 
-app.use(cors())
+app.use(cors({credentials: true}))
 app.use(express.json());
 app.use(cookieParser());
 app.use(multer({ storage: storage, limits: { fileSize: 2097152 } }).any());
