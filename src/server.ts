@@ -107,6 +107,7 @@ import postRouter from "./router/post.router";
 import seekerpostRouter from "./router/seekerpost.router";
 import verificationRouter from "./router/verification.router";
 import superRouter from "./router/super.router";
+import authRouter from "./router/auth.router"
 
 app.use(cors())
 app.use(express.json());
@@ -167,6 +168,7 @@ connectToDatabase()
     app.use(`/magang-portal/${VERSION_API}/seekerpost`, seekerpostRouter);
     app.use(`/magang-portal/${VERSION_API}/verification`, verificationRouter);
     app.use(`/magang-portal/${VERSION_API}/super`, superRouter);
+    app.use(`/magang-portal/${VERSION_API}/auth`, authRouter);
     app.listen(PORT, () => {
       console.log(`Server berjalan di http://localhost:${PORT}`);
     });

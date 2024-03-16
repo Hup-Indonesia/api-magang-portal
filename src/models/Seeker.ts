@@ -83,7 +83,10 @@ Seeker.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    last_name: DataTypes.STRING,
+    last_name: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     domicile: DataTypes.STRING,
     date_of_birth: DataTypes.STRING,
     email: {

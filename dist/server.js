@@ -111,6 +111,7 @@ const post_router_1 = __importDefault(require("./router/post.router"));
 const seekerpost_router_1 = __importDefault(require("./router/seekerpost.router"));
 const verification_router_1 = __importDefault(require("./router/verification.router"));
 const super_router_1 = __importDefault(require("./router/super.router"));
+const auth_router_1 = __importDefault(require("./router/auth.router"));
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
@@ -159,6 +160,7 @@ let PORT = process.env.PORT || 8080;
     app.use(`/magang-portal/${VERSION_API}/seekerpost`, seekerpost_router_1.default);
     app.use(`/magang-portal/${VERSION_API}/verification`, verification_router_1.default);
     app.use(`/magang-portal/${VERSION_API}/super`, super_router_1.default);
+    app.use(`/magang-portal/${VERSION_API}/auth`, auth_router_1.default);
     app.listen(PORT, () => {
         console.log(`Server berjalan di http://localhost:${PORT}`);
     });

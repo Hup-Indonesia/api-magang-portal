@@ -25,7 +25,10 @@ Seeker.init({
         type: sequelize_1.DataTypes.STRING,
         allowNull: false,
     },
-    last_name: sequelize_1.DataTypes.STRING,
+    last_name: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false
+    },
     domicile: sequelize_1.DataTypes.STRING,
     date_of_birth: sequelize_1.DataTypes.STRING,
     email: {
