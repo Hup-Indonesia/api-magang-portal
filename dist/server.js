@@ -112,19 +112,7 @@ const seekerpost_router_1 = __importDefault(require("./router/seekerpost.router"
 const verification_router_1 = __importDefault(require("./router/verification.router"));
 const super_router_1 = __importDefault(require("./router/super.router"));
 const auth_router_1 = __importDefault(require("./router/auth.router"));
-// var whitelist = ['http://localhost:5173', 'https://hup.co.id']
-var corsOptions = {
-    origin: function (origin, callback) {
-        if (!origin || origin.startsWith('http://localhost')) {
-            callback(null, true); // Memperbolehkan origin local
-        }
-        else {
-            callback(new Error('Not allowed by CORS')); // Menolak origin lainnya
-        }
-    },
-    credentials: true
-};
-app.use((0, cors_1.default)(corsOptions));
+app.use((0, cors_1.default)({ credentials: true, origin: 'http://localhost:5173' }));
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 app.use((0, multer_1.default)({ storage: storage, limits: { fileSize: 2097152 } }).any());

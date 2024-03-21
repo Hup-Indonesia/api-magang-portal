@@ -109,18 +109,7 @@ import verificationRouter from "./router/verification.router";
 import superRouter from "./router/super.router";
 import authRouter from "./router/auth.router"
 
-// var whitelist = ['http://localhost:5173', 'https://hup.co.id']
-var corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || origin.startsWith('http://localhost')) {
-      callback(null, true); // Memperbolehkan origin local
-    } else {
-      callback(new Error('Not allowed by CORS')); // Menolak origin lainnya
-    }
-  },
-  credentials: true
-};
-app.use(cors(corsOptions))
+app.use(cors({credentials: true, origin: 'http://localhost:5173'}))
 app.use(express.json());
 app.use(cookieParser());
 app.use(multer({ storage: storage, limits: { fileSize: 2097152 } }).any());
