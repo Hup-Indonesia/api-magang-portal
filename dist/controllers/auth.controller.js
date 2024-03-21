@@ -93,7 +93,7 @@ const Login = async (req, res) => {
             httpOnly: true,
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
-        res.json({ accessToken });
+        res.json({ accessToken, refreshToken });
     }
     catch (error) {
         res.status(500).json({ message: error.message });
@@ -101,11 +101,10 @@ const Login = async (req, res) => {
 };
 exports.Login = Login;
 const Refresh = async (req, res) => {
-    const cookies = req.cookies;
+    const refreshToken = req.body.refreshToken;
     try {
-        if (!cookies?.refreshToken)
+        if (!refreshToken)
             return res.status(400).json({ message: "Dont have refresh token" });
-        const refreshToken = cookies.refreshToken;
         jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, async (err, decoded) => {
             if (err)
                 return res.status(400).json({ message: "Unauthorized, refresh token invalid" });
