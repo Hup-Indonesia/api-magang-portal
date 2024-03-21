@@ -48,12 +48,8 @@ const Register = async (req, res) => {
             let newSeeker = await Seeker_1.default.create(seekerData);
             const accessToken = jsonwebtoken_1.default.sign({ id: newSeeker.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15s" });
             const refreshToken = jsonwebtoken_1.default.sign({ id: newSeeker.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "1d" });
-            res.cookie("refreshToken", refreshToken, {
-                httpOnly: true,
-                maxAge: 7 * 24 * 60 * 60 * 1000
-            });
             // sendWelcomeEmail(seekerData.email, seekerData.first_name)
-            res.status(201).json({ accessToken });
+            res.status(201).json({ accessToken, refreshToken });
         })
             .catch((error) => {
             console.error("Gagal membuat pengguna:", error);

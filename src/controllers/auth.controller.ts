@@ -31,14 +31,9 @@ export const Register = async (req: Request, res: Response) => {
                     process.env.REFRESH_TOKEN_SECRET,
                     {expiresIn: "1d"} 
                 )
-
-                res.cookie("refreshToken", refreshToken, {
-                    httpOnly: true,
-                    maxAge: 7 * 24 * 60 * 60 * 1000
-                })
     
                 // sendWelcomeEmail(seekerData.email, seekerData.first_name)
-                res.status(201).json({accessToken})
+                res.status(201).json({accessToken, refreshToken})
             })
             .catch((error) => {
                 console.error("Gagal membuat pengguna:", error);
