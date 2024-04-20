@@ -44,7 +44,20 @@ export const getSeekerById = async (req: Request, res: Response) => {
   const seekerId = req.params.id;
 
   try {
-    const mahasiswa = await Seeker.findByPk(seekerId,{attributes:{exclude:["createdAt","updatedAt","password"]}});
+    const mahasiswa = await Seeker.findByPk(seekerId,{attributes:{exclude:["createdAt","updatedAt","password"]}, include:[
+      {model:Experience, as:"experiences", attributes:{exclude:["createdAt","updatedAt"]}},
+      {model:Education, as:"educations", attributes:{exclude:["createdAt","updatedAt"]}},
+      {model:Attachment, as:"attachment", attributes:{exclude:["createdAt","updatedAt"]}},
+      {model:Recruiter, as:"recruiter", attributes:{exclude:["createdAt","updatedAt"]}},
+      {model:Post, as:"applied", attributes:{exclude:["createdAt","updatedAt"]},include:[
+        {model:Recruiter, as: "recruiter",attributes:{exclude:["createdAt","updatedAt","ownerId"]}, through:{attributes:[]}},
+      ]},
+      {model:Post, as:"saved", attributes:{exclude:["createdAt","updatedAt"]}, include:[
+        {model:Recruiter, as: "recruiter",attributes:{exclude:["createdAt","updatedAt","ownerId"]}, through:{attributes:[]}},
+        {model:Seeker, as: "applicants",attributes:{exclude:["createdAt","updatedAt","ownerId"]}},
+        {model:Seeker, as: "saved",attributes:{exclude:["createdAt","updatedAt","ownerId"]}},
+      ]},
+    ]});
 
     if(!mahasiswa) return res.status(404).json({message: "seeker not found"})
 

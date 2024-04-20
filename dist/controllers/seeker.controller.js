@@ -67,7 +67,20 @@ exports.getAllSeeker = getAllSeeker;
 const getSeekerById = async (req, res) => {
     const seekerId = req.params.id;
     try {
-        const mahasiswa = await Seeker_1.default.findByPk(seekerId, { attributes: { exclude: ["createdAt", "updatedAt", "password"] } });
+        const mahasiswa = await Seeker_1.default.findByPk(seekerId, { attributes: { exclude: ["createdAt", "updatedAt", "password"] }, include: [
+                { model: Experience_1.default, as: "experiences", attributes: { exclude: ["createdAt", "updatedAt"] } },
+                { model: Education_1.default, as: "educations", attributes: { exclude: ["createdAt", "updatedAt"] } },
+                { model: Attachment_1.default, as: "attachment", attributes: { exclude: ["createdAt", "updatedAt"] } },
+                { model: Recruiter_1.default, as: "recruiter", attributes: { exclude: ["createdAt", "updatedAt"] } },
+                { model: Post_1.default, as: "applied", attributes: { exclude: ["createdAt", "updatedAt"] }, include: [
+                        { model: Recruiter_1.default, as: "recruiter", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] }, through: { attributes: [] } },
+                    ] },
+                { model: Post_1.default, as: "saved", attributes: { exclude: ["createdAt", "updatedAt"] }, include: [
+                        { model: Recruiter_1.default, as: "recruiter", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] }, through: { attributes: [] } },
+                        { model: Seeker_1.default, as: "applicants", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] } },
+                        { model: Seeker_1.default, as: "saved", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] } },
+                    ] },
+            ] });
         if (!mahasiswa)
             return res.status(404).json({ message: "seeker not found" });
         return (0, response_1.default)(200, `success get customer by id`, mahasiswa, res);
