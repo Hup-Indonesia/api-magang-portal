@@ -9,7 +9,7 @@ const postRouter = express_1.default.Router();
 postRouter.get("/", post_controller_1.getAllPost);
 postRouter.get("/:id", post_controller_1.getPostById);
 postRouter.post("/external", post_controller_1.CreatePostExternal);
-postRouter.put("/:id", post_controller_1.updatePosts);
+postRouter.put("/:id", post_controller_1.updatePost);
 postRouter.delete("/:id", post_controller_1.DeletePost);
 exports.default = postRouter;
 //# sourceMappingURL=post.router.js.map

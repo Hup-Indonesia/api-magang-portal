@@ -38,7 +38,6 @@ const dotenv = __importStar(require("dotenv"));
 const Seeker_1 = __importDefault(require("./models/Seeker"));
 const JWT_1 = require("./config/JWT");
 const Mailer_1 = __importDefault(require("./config/Mailer"));
-const helmet_1 = __importDefault(require("helmet"));
 dotenv.config();
 const MAILER_EMAIL = process.env.MAILER_EMAIL;
 const MAILER_NAME = process.env.MAILER_NAME;
@@ -112,36 +111,40 @@ const seekerpost_router_1 = __importDefault(require("./router/seekerpost.router"
 const verification_router_1 = __importDefault(require("./router/verification.router"));
 const super_router_1 = __importDefault(require("./router/super.router"));
 const auth_router_1 = __importDefault(require("./router/auth.router"));
+const experiences_router_1 = __importDefault(require("./router/experiences.router"));
+const educations_router_1 = __importDefault(require("./router/educations.router"));
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 app.use((0, multer_1.default)({ storage: storage, limits: { fileSize: 2097152 } }).any());
 app.enable("trust proxy");
-app.use((0, helmet_1.default)());
-const cspOptions = {
-    directives: {
-        defaultSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "blob:", "lh3.googleusercontent.com"],
-        scriptSrc: [
-            "'self'",
-            'code.jquery.com',
-            'cdnjs.cloudflare.com',
-            'cdn.datatables.net',
-            "cdn.jsdelivr.net",
-            "cdn.quilljs.com"
-        ],
-    },
-};
+// app.use(helmet());
+// const cspOptions = {
+//   directives: {
+//     defaultSrc: ["'self'"],
+//     imgSrc: ["'self'", "data:", "blob:", "lh3.googleusercontent.com"], // Menambahkan "blob:"
+//     scriptSrc: [
+//       "'self'",
+//       'code.jquery.com',
+//       'cdnjs.cloudflare.com',
+//       'cdn.datatables.net',
+//       "cdn.jsdelivr.net",
+//       "cdn.quilljs.com"
+//     ],
+//   },
+// };
 // Aktifkan opsi HSTS untuk memaksa redirect dari HTTP ke HTTPS
-app.use(helmet_1.default.hsts({
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true,
-}));
-app.use((0, helmet_1.default)({
-    xFrameOptions: { action: "deny" },
-}));
-app.use(helmet_1.default.contentSecurityPolicy(cspOptions));
+// app.use(
+//   helmet.hsts({
+//     maxAge: 31536000, // 1 tahun
+//     includeSubDomains: true,
+//     preload: true,
+//   })
+// );
+// app.use(helmet({
+//   xFrameOptions: { action: "deny" },
+// }));
+// app.use(helmet.contentSecurityPolicy(cspOptions));
 // konfigurasi static item dalam public folder
 app.use("/", express_1.default.static(path_1.default.join(__dirname, "../public")));
 // konfigurasi view engine "EJS"
@@ -161,6 +164,8 @@ let PORT = process.env.PORT || 8080;
     app.use(`/magang-portal/${VERSION_API}/verification`, verification_router_1.default);
     app.use(`/magang-portal/${VERSION_API}/super`, super_router_1.default);
     app.use(`/magang-portal/${VERSION_API}/auth`, auth_router_1.default);
+    app.use(`/magang-portal/${VERSION_API}/experiences`, experiences_router_1.default);
+    app.use(`/magang-portal/${VERSION_API}/educations`, educations_router_1.default);
     app.listen(PORT, () => {
         console.log(`Server berjalan di http://localhost:${PORT}`);
     });

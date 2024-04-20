@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DeletePost = exports.CreatePostExternal = exports.updatePosts = exports.getPostById = exports.getAllPost = void 0;
+exports.DeletePost = exports.CreatePostExternal = exports.updatePost = exports.getPostById = exports.getAllPost = void 0;
 const Seeker_1 = __importDefault(require("../models/Seeker"));
 const Experience_1 = __importDefault(require("../models/Experience"));
 const Education_1 = __importDefault(require("../models/Education"));
@@ -13,22 +13,39 @@ const Post_1 = __importDefault(require("../models/Post"));
 const node_cron_1 = __importDefault(require("node-cron"));
 const getAllPost = async (req, res) => {
     try {
-        let postQuery = req.query;
-        let page = req.query.page || 1;
-        let limit = req.query.limit || 9999;
-        let startIndex = (+page - 1) * +limit;
-        let endIndex = +page * +limit;
-        const post = await Post_1.default.findAll({ attributes: { exclude: ["createdAt", "updatedAt"] }, include: [
-                { model: Recruiter_1.default, as: "recruiter", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] }, through: { attributes: [] } },
-                { model: Seeker_1.default, as: "applicants", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] } },
-                { model: Seeker_1.default, as: "saved", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] } },
-            ] });
-        const result = post.slice(startIndex, endIndex);
-        return (0, response_1.default)(200, "success call all posts", result, res);
+        const search = req.query.search || "";
+        const location = req.query.location || "";
+        const worktime = req.query.worktime || "";
+        const salary = req.query.salary || "";
+        let db_page = req.query.page || 1;
+        let db_limit = req.query.limit || 9;
+        const POST = await Post_1.default.findAll({
+            limit: +db_limit,
+            offset: (+db_page - 1) * +db_limit,
+            attributes: { exclude: ["createdAt", "updatedAt"] }, include: [
+                { model: Recruiter_1.default, as: "recruiter", attributes: ["rec_org_name", "rec_org_website", "rec_org_logo", "rec_mode"], through: { attributes: [] } },
+                { model: Seeker_1.default, as: "applicants", attributes: ["id", "first_name", "last_name", "email", "profile_picture"] },
+                { model: Seeker_1.default, as: "saved", attributes: ["id", "first_name", "last_name", "email", "profile_picture"] },
+            ]
+        });
+        let filtered_data = POST.filter(post => {
+            let post_json = post.toJSON();
+            const matchesSearch = post_json.post_position.toLowerCase().includes(search.toString().toLowerCase()) || post_json.post_overview.toLowerCase().includes(search.toString().toLowerCase()) || post_json.recruiter[0].rec_org_name.toLowerCase().includes(search.toString().toLowerCase());
+            const matchesLocation = post.post_location.toLowerCase().includes(location.toString().toLowerCase());
+            const matchesWorkTime = post.post_work_time_perweek.toLowerCase().includes(worktime.toString().toLowerCase());
+            const matchesSalary = post.post_thp.toLowerCase().includes(salary.toString().toLowerCase());
+            return matchesSearch && matchesLocation && matchesWorkTime && matchesSalary;
+        });
+        return res.status(200).json({
+            status_code: 200,
+            message: "success get app posts",
+            page: db_page,
+            limit: db_limit,
+            datas: filtered_data
+        });
     }
     catch (error) {
-        console.error("Gagal mengambil data pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        return res.status(500).json({ message: error.message });
     }
 };
 exports.getAllPost = getAllPost;
@@ -42,38 +59,32 @@ const getPostById = async (req, res) => {
                     ] },
                 { model: Seeker_1.default, as: "saved", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] } },
             ] });
-        if (post) {
-            return (0, response_1.default)(200, "success get all posts", post, res);
-        }
-        else {
-            return (0, response_1.default)(404, "post not found", [], res);
-        }
+        if (!post)
+            return res.status(404).json({ message: "post not found" });
+        return (0, response_1.default)(200, "success get post by id", post, res);
     }
     catch (error) {
-        console.error("Gagal mengambil data pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        return res.status(500).json({ message: error.message });
     }
 };
 exports.getPostById = getPostById;
-const updatePosts = async (req, res) => {
+const updatePost = async (req, res) => {
     const postId = req.params.id;
     const updatedPost = req.body; // Data pembaruan pengguna dari permintaan PUT  
     try {
         const post = await Post_1.default.findByPk(postId);
+        if (!post)
+            return res.status(404).json({ message: "post not found" });
         if (post) {
             await post.update(updatedPost);
-            (0, response_1.default)(200, "Success update pengguna", post, res);
-        }
-        else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
+            return (0, response_1.default)(200, "Success update pengguna", post, res);
         }
     }
     catch (error) {
-        console.error("Gagal memperbarui pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        return res.status(500).json({ message: error.message });
     }
 };
-exports.updatePosts = updatePosts;
+exports.updatePost = updatePost;
 const CreatePostExternal = async (req, res) => {
     let postData = req.body; // Anda akan mendapatkan data pengguna dari permintaan POST
     const recruiterId = postData.recruiter_id;
@@ -129,6 +140,8 @@ const DeletePost = async (req, res) => {
     }
 };
 exports.DeletePost = DeletePost;
+// GET ALL APPLICANT BY POST
+// GET ALL SAVED BY POST
 node_cron_1.default.schedule('0 */2 * * *', () => {
     CronAutoCloseJob();
 });

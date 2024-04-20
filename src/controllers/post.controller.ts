@@ -1,40 +1,52 @@
-import { Request, Response, query } from "express";
+import { Request, Response } from "express";
 import Seeker from "../models/Seeker";
 import Experience from "../models/Experience";
 import Education from "../models/Education";
 import response from "./response";
-import * as bcrypt from 'bcrypt';
-import { createToken } from "../config/JWT";
-import Attachment from "../models/Attachment";
-import path from "path";
-import fs from "fs"
 import Recruiter from "../models/Recruiter";
-import Gallery from "../models/Gallery";
 import Post from "../models/Post";
-import { Op } from "sequelize";
 import cron from "node-cron"
 
 
 export const getAllPost = async (req: Request, res: Response) => {
     try {
-      let postQuery = req.query
-      
-      let page = req.query.page || 1
-      let limit = req.query.limit || 9999
+      const search = req.query.search || ""
+      const location = req.query.location || ""
+      const worktime = req.query.worktime || ""
+      const salary = req.query.salary || ""
 
-      let startIndex = (+page - 1) * +limit
-      let endIndex = +page * +limit
+      let db_page = req.query.page || 1
+      let db_limit = req.query.limit || 9
       
-      const post = await Post.findAll({attributes:{exclude:["createdAt","updatedAt"]}, include:[
-        {model:Recruiter, as: "recruiter",attributes:{exclude:["createdAt","updatedAt","ownerId"]}, through:{attributes:[]}},
-        {model:Seeker, as: "applicants",attributes:{exclude:["createdAt","updatedAt","ownerId"]}},
-        {model:Seeker, as: "saved",attributes:{exclude:["createdAt","updatedAt","ownerId"]}},
+      const POST = await Post.findAll({
+        limit: +db_limit,
+        offset: (+db_page - 1) * +db_limit,
+        attributes:{exclude:["createdAt","updatedAt"]}, include:[
+          {model:Recruiter, as: "recruiter",attributes:["rec_org_name", "rec_org_website", "rec_org_logo", "rec_mode"], through:{attributes:[]}},
+          {model:Seeker, as: "applicants",attributes:["id", "first_name", "last_name", "email", "profile_picture"]},
+          {model:Seeker, as: "saved",attributes:["id", "first_name", "last_name", "email", "profile_picture"]},
       ]});
-      const result = post.slice(startIndex, endIndex)
-      return response(200, "success call all posts", result, res);
+      
+
+      let filtered_data = POST.filter(post => {
+        let post_json = post.toJSON()
+        const matchesSearch = post_json.post_position.toLowerCase().includes(search.toString().toLowerCase()) || post_json.post_overview.toLowerCase().includes(search.toString().toLowerCase()) || post_json.recruiter[0].rec_org_name.toLowerCase().includes(search.toString().toLowerCase());
+        const matchesLocation = post.post_location.toLowerCase().includes(location.toString().toLowerCase());
+        const matchesWorkTime = post.post_work_time_perweek.toLowerCase().includes(worktime.toString().toLowerCase());
+        const matchesSalary = post.post_thp.toLowerCase().includes(salary.toString().toLowerCase());
+        
+        return matchesSearch && matchesLocation && matchesWorkTime && matchesSalary
+      })
+
+      return res.status(200).json({
+        status_code:200,
+        message: "success get app posts",
+        page: db_page,
+        limit: db_limit,
+        datas: filtered_data
+      })
     } catch (error) {
-      console.error("Gagal mengambil data pengguna:", error);
-      res.status(500).json({ error: "Server error" });
+      return res.status(500).json({ message: error.message });
     }
 };
 
@@ -48,32 +60,30 @@ export const getPostById = async (req: Request, res: Response) => {
         ]},
         {model:Seeker, as: "saved",attributes:{exclude:["createdAt","updatedAt","ownerId"]}},
       ]});
-      if(post){
-        return response(200, "success get all posts", post, res);
-      }else{
-        return response(404, "post not found", [], res);
-      }
+
+      if(!post) return res.status(404).json({message: "post not found"})
+
+      return response(200, "success get post by id", post, res);
     } catch (error) {
-      console.error("Gagal mengambil data pengguna:", error);
-      res.status(500).json({ error: "Server error" });
+      return res.status(500).json({ message: error.message });
     }
 };
 
-export const updatePosts = async (req: Request, res: Response) => {
+export const updatePost = async (req: Request, res: Response) => {
   const postId = req.params.id;
   const updatedPost = req.body; // Data pembaruan pengguna dari permintaan PUT  
 
   try {
     const post = await Post.findByPk(postId);
+
+    if(!post) return res.status(404).json({message: "post not found"})
+
     if (post) {
       await post.update(updatedPost);
-      response(200, "Success update pengguna", post, res)
-    } else {
-      res.status(404).json({ error: "Pengguna tidak ditemukan" });
+      return response(200, "Success update pengguna", post, res)
     }
   } catch (error) {
-    console.error("Gagal memperbarui pengguna:", error);
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -129,6 +139,8 @@ export const DeletePost = async (req: Request, res: Response) => {
   }
 };
 
+// GET ALL APPLICANT BY POST
+// GET ALL SAVED BY POST
 
 cron.schedule('0 */2 * * *', () => {
   CronAutoCloseJob()

@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addApplied = exports.addSavedPost = exports.addRecruiter = exports.deleteAttachment = exports.setAttachment = exports.updateEducation = exports.deleteEducation = exports.addEducation = exports.updateExperience = exports.deleteExperience = exports.addExperience = exports.deleteSeeker = exports.updateSeeker = exports.logoutSeeker = exports.loginSeeker = exports.createSeeker = exports.getSeekerById = exports.getAllSeeker = void 0;
+exports.getAllAppliedPostBySeekerId = exports.addApplied = exports.getAllSavedPostBySeekerId = exports.addSavedPost = exports.addRecruiter = exports.deleteAttachment = exports.setAttachment = exports.getAttachmentBySeekerId = exports.getEducationsBySeekerId = exports.addEducation = exports.addExperience = exports.getExperienceBySeekerId = exports.deleteSeeker = exports.updateSeeker = exports.logoutSeeker = exports.loginSeeker = exports.createSeeker = exports.getSeekerById = exports.getAllSeeker = void 0;
 const Seeker_1 = __importDefault(require("../models/Seeker"));
 const Experience_1 = __importDefault(require("../models/Experience"));
 const Education_1 = __importDefault(require("../models/Education"));
@@ -35,7 +35,6 @@ const bcrypt = __importStar(require("bcrypt"));
 const JWT_1 = require("../config/JWT");
 const Attachment_1 = __importDefault(require("../models/Attachment"));
 const path_1 = __importDefault(require("path"));
-const fs_1 = __importDefault(require("fs"));
 const Recruiter_1 = __importDefault(require("../models/Recruiter"));
 const Post_1 = __importDefault(require("../models/Post"));
 const Mailer_1 = __importDefault(require("../config/Mailer"));
@@ -44,23 +43,23 @@ dotenv.config();
 // Fungsi ini mengambil semua pengguna
 const getAllSeeker = async (req, res) => {
     try {
-        let page = req.query.page || 1;
-        let limit = req.query.limit || 9999;
-        let startIndex = (+page - 1) * +limit;
-        let endIndex = +page * +limit;
-        const seeker = await Seeker_1.default.findAll({ attributes: { exclude: ["createdAt", "updatedAt", "password"] }, include: [
-                { model: Experience_1.default, as: "experiences", attributes: { exclude: ["createdAt", "updatedAt"] } },
-                { model: Education_1.default, as: "educations", attributes: { exclude: ["createdAt", "updatedAt"] } },
-                { model: Attachment_1.default, as: "attachment", attributes: { exclude: ["createdAt", "updatedAt"] } },
-                { model: Post_1.default, as: "applied", attributes: { exclude: ["createdAt", "updatedAt"] } },
-                { model: Post_1.default, as: "saved", attributes: { exclude: ["createdAt", "updatedAt"] } },
-            ] });
-        const result = seeker.slice(startIndex, endIndex);
-        (0, response_1.default)(200, "success call all seeker", result, res);
+        let db_page = req.query.page || 1;
+        let db_limit = req.query.limit || 20;
+        const seeker = await Seeker_1.default.findAll({
+            limit: +db_limit,
+            offset: (+db_page - 1) * +db_limit,
+            attributes: { exclude: ["createdAt", "updatedAt", "password"] }
+        });
+        return res.status(200).json({
+            status_code: 200,
+            message: "success call all seeker",
+            limit: db_limit,
+            page: db_page,
+            datas: seeker,
+        });
     }
     catch (error) {
-        console.error("Gagal mengambil data pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.getAllSeeker = getAllSeeker;
@@ -68,29 +67,13 @@ exports.getAllSeeker = getAllSeeker;
 const getSeekerById = async (req, res) => {
     const seekerId = req.params.id;
     try {
-        const mahasiswa = await Seeker_1.default.findByPk(seekerId, { attributes: { exclude: ["createdAt", "updatedAt", "password"] }, include: [
-                { model: Experience_1.default, as: "experiences", attributes: { exclude: ["createdAt", "updatedAt"] } },
-                { model: Education_1.default, as: "educations", attributes: { exclude: ["createdAt", "updatedAt"] } },
-                { model: Attachment_1.default, as: "attachment", attributes: { exclude: ["createdAt", "updatedAt"] } },
-                { model: Recruiter_1.default, as: "recruiter", attributes: { exclude: ["createdAt", "updatedAt"] } },
-                { model: Post_1.default, as: "applied", attributes: { exclude: ["createdAt", "updatedAt"] }, include: [
-                        { model: Recruiter_1.default, as: "recruiter", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] }, through: { attributes: [] } },
-                    ] },
-                { model: Post_1.default, as: "saved", attributes: { exclude: ["createdAt", "updatedAt"] }, include: [
-                        { model: Recruiter_1.default, as: "recruiter", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] }, through: { attributes: [] } },
-                        { model: Seeker_1.default, as: "applicants", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] } },
-                        { model: Seeker_1.default, as: "saved", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] } },
-                    ] },
-            ] });
-        if (mahasiswa) {
-            (0, response_1.default)(200, `Success get customer by id`, mahasiswa, res);
-        }
-        else {
-            (0, response_1.default)(404, "Seeker not found", [], res);
-        }
+        const mahasiswa = await Seeker_1.default.findByPk(seekerId, { attributes: { exclude: ["createdAt", "updatedAt", "password"] } });
+        if (!mahasiswa)
+            return res.status(404).json({ message: "seeker not found" });
+        return (0, response_1.default)(200, `success get customer by id`, mahasiswa, res);
     }
     catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.getSeekerById = getSeekerById;
@@ -113,13 +96,11 @@ const createSeeker = async (req, res) => {
             (0, response_1.default)(201, "success create new users", newSeeker, res);
         })
             .catch((error) => {
-            console.error("Gagal membuat pengguna:", error);
-            res.status(500).json({ error: "Server error" });
+            res.status(500).json({ message: error.message });
         });
     }
     catch (error) {
-        console.error("Gagal membuat pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.createSeeker = createSeeker;
@@ -147,19 +128,17 @@ const loginSeeker = async (req, res) => {
         });
     }
     catch (error) {
-        console.error("Gagal login pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        return res.status(500).json({ message: error.message });
     }
 };
 exports.loginSeeker = loginSeeker;
 const logoutSeeker = async (req, res) => {
     try {
         res.clearCookie("access-token");
-        res.redirect("/");
+        return res.redirect("/");
     }
     catch (error) {
-        console.error("Gagal logout pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        return res.status(500).json({ message: error.message });
     }
 };
 exports.logoutSeeker = logoutSeeker;
@@ -169,37 +148,16 @@ const updateSeeker = async (req, res) => {
     const updatedSeeker = req.body; // Data pembaruan pengguna dari permintaan PUT  
     try {
         const seeker = await Seeker_1.default.findByPk(seekerId);
+        if (!seeker)
+            return res.status(404).json({ message: "seeker not found" });
         if (seeker) {
-            // Menambahakan URL Image ke dalam gambar, 
-            // dan menghapus gambar lama ketika upload gambar baru
-            if (req.files.length !== 0) {
-                if (seeker.profile_picture) {
-                    const fileToDelete = `public/files/uploads/${seeker.profile_picture.split("uploads/")[1]}`;
-                    if (fs_1.default.existsSync(fileToDelete)) {
-                        try {
-                            fs_1.default.unlinkSync(fileToDelete);
-                            console.log(`File ${seeker.profile_picture.split("uploads/")[1]} deleted successfully.`);
-                        }
-                        catch (err) {
-                            console.error(`Error deleting file ${seeker.profile_picture.split("uploads/")[1]}: ${err}`);
-                        }
-                    }
-                    else {
-                        console.log(`File ${seeker.profile_picture.split("uploads/")[1]} not found.`);
-                    }
-                }
-                req.body.profile_picture = `${req.protocol + "://" + req.get("host")}/files/uploads/${req.files[0].filename}`;
-            }
             await seeker.update(updatedSeeker);
-            (0, response_1.default)(200, "Success update pengguna", seeker, res);
-        }
-        else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
+            (0, response_1.default)(200, "success update pengguna", seeker, res);
         }
     }
     catch (error) {
         console.error("Gagal memperbarui pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ error: error.message });
     }
 };
 exports.updateSeeker = updateSeeker;
@@ -208,17 +166,15 @@ const deleteSeeker = async (req, res) => {
     const seekerId = req.params.id;
     try {
         const seeker = await Seeker_1.default.findByPk(seekerId);
+        if (!seeker)
+            return res.status(404).json({ message: "seeker not found" });
         if (seeker) {
             await seeker.destroy();
-            res.status(204).end(); // Mengembalikan 204 No Content jika pengguna berhasil dihapus
-        }
-        else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
+            return res.status(204).end(); // Mengembalikan 204 No Content jika pengguna berhasil dihapus
         }
     }
     catch (error) {
-        console.error("Gagal menghapus pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.deleteSeeker = deleteSeeker;
@@ -234,6 +190,20 @@ const hashPassword = async (plainPassword) => {
 };
 // EXPERIENCES
 // Fungsi ini membuat experience pengguna berdasarkan ID
+const getExperienceBySeekerId = async (req, res) => {
+    const seekerId = req.params.id;
+    try {
+        const seeker = await Seeker_1.default.findByPk(seekerId);
+        if (!seeker)
+            return res.status(404).json({ message: "seeker not found" });
+        const EXPERIENCES = await seeker.getExperiences();
+        return (0, response_1.default)(200, "success get all experience from some seeker", EXPERIENCES, res);
+    }
+    catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+exports.getExperienceBySeekerId = getExperienceBySeekerId;
 const addExperience = async (req, res) => {
     const seekerId = req.params.id;
     const experienceData = req.body; // Data pembaruan pengguna dari permintaan PUT
@@ -246,71 +216,14 @@ const addExperience = async (req, res) => {
             });
         }
         else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
+            res.status(404).json({ message: "Pengguna tidak ditemukan" });
         }
     }
     catch (error) {
-        console.error("Gagal memperbarui pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.addExperience = addExperience;
-const deleteExperience = async (req, res) => {
-    const seekerId = req.params.id;
-    const deletionId = req.params.deletionId;
-    try {
-        const seeker = await Seeker_1.default.findByPk(seekerId);
-        if (seeker) {
-            // Temukan pengalaman dengan ID tertentu yang dimiliki oleh seeker
-            const experience = await seeker.getExperiences({ where: { id: deletionId } });
-            if (experience.length > 0) {
-                // Jika pengalaman ditemukan, hapus pengalaman tersebut
-                seeker.removeExperience(experience);
-                await Experience_1.default.destroy({ where: { id: deletionId } });
-                (0, response_1.default)(200, "Pengalaman berhasil dihapus", seeker, res);
-            }
-            else {
-                res.status(404).json({ error: "Experience tidak ditemukan" });
-            }
-        }
-        else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
-        }
-    }
-    catch (error) {
-        console.error("Gagal memperbarui pengguna:", error);
-        res.status(500).json({ error: "Server error" });
-    }
-};
-exports.deleteExperience = deleteExperience;
-const updateExperience = async (req, res) => {
-    const seekerId = req.params.id;
-    const updateId = req.params.updateId;
-    try {
-        const seeker = await Seeker_1.default.findByPk(seekerId);
-        if (seeker) {
-            // Temukan pengalaman dengan ID tertentu yang dimiliki oleh seeker
-            const experience = await seeker.getExperiences({ where: { id: updateId } });
-            if (experience.length > 0) {
-                if (req.body.exp_enddate == null)
-                    req.body.exp_enddate = null;
-                await Experience_1.default.update(req.body, { where: { id: updateId } });
-                (0, response_1.default)(200, "Education berhasil diupdate", seeker, res);
-            }
-            else {
-                res.status(404).json({ error: "Education tidak ditemukan" });
-            }
-        }
-        else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
-        }
-    }
-    catch (error) {
-        console.error("Gagal memperbarui pengguna:", error);
-        res.status(500).json({ error: "Server error" });
-    }
-};
-exports.updateExperience = updateExperience;
 // EDUCATION
 // Fungsi ini membuat education pengguna berdasarkan ID
 const addEducation = async (req, res) => {
@@ -334,144 +247,89 @@ const addEducation = async (req, res) => {
     }
 };
 exports.addEducation = addEducation;
-const deleteEducation = async (req, res) => {
+const getEducationsBySeekerId = async (req, res) => {
     const seekerId = req.params.id;
-    const deletionId = req.params.deletionId;
     try {
         const seeker = await Seeker_1.default.findByPk(seekerId);
-        if (seeker) {
-            // Temukan pengalaman dengan ID tertentu yang dimiliki oleh seeker
-            const education = await seeker.getEducations({ where: { id: deletionId } });
-            if (education.length > 0) {
-                // Jika pengalaman ditemukan, hapus pengalaman tersebut
-                seeker.removeEducation(education);
-                await Education_1.default.destroy({ where: { id: deletionId } });
-                (0, response_1.default)(200, "Education berhasil dihapus", seeker, res);
-            }
-            else {
-                res.status(404).json({ error: "Education tidak ditemukan" });
-            }
-        }
-        else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
-        }
+        if (!seeker)
+            return res.status(404).json({ message: "seeker not found" });
+        const EDUCATIONS = await seeker.getEducations();
+        return (0, response_1.default)(200, "success get all educations from some seeker", EDUCATIONS, res);
     }
     catch (error) {
-        console.error("Gagal memperbarui pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        return res.status(500).json({ message: error.message });
     }
 };
-exports.deleteEducation = deleteEducation;
-const updateEducation = async (req, res) => {
-    const seekerId = req.params.id;
-    const updateId = req.params.updateId;
-    try {
-        const seeker = await Seeker_1.default.findByPk(seekerId);
-        if (seeker) {
-            // Temukan pengalaman dengan ID tertentu yang dimiliki oleh seeker
-            const education = await seeker.getEducations({ where: { id: updateId } });
-            if (education.length > 0) {
-                await Education_1.default.update(req.body, { where: { id: updateId } });
-                (0, response_1.default)(200, "Education berhasil diupdate", seeker, res);
-            }
-            else {
-                res.status(404).json({ error: "Education tidak ditemukan" });
-            }
-        }
-        else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
-        }
-    }
-    catch (error) {
-        console.error("Gagal memperbarui pengguna:", error);
-        res.status(500).json({ error: "Server error" });
-    }
-};
-exports.updateEducation = updateEducation;
+exports.getEducationsBySeekerId = getEducationsBySeekerId;
 // ATTACHMENT
+const getAttachmentBySeekerId = async (req, res) => {
+    const seekerId = req.params.id;
+    try {
+        const seeker = await Seeker_1.default.findByPk(seekerId);
+        if (!seeker)
+            return res.status(404).json({ message: "seeker not found" });
+        const ATTACHMENT = await seeker.getAttachment({ attributes: { exclude: ["createdAt", "updatedAt"] } });
+        return (0, response_1.default)(200, "success get attachment", ATTACHMENT, res);
+    }
+    catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+exports.getAttachmentBySeekerId = getAttachmentBySeekerId;
 const setAttachment = async (req, res) => {
     const seekerId = req.params.id;
     const attachmentData = req.body; // Data pembaruan pengguna dari permintaan PUT
     try {
         const seeker = await Seeker_1.default.findByPk(seekerId);
+        if (!seeker)
+            return res.status(404).json({ message: "seeker not found" });
         if (seeker) {
             // if user upload file resume
-            let attachment = (await seeker.getAttachment());
+            let attachment = await seeker.getAttachment();
             attachmentData.atc_resume = attachment ? attachment.atc_resume : null;
             if (req.files.length !== 0) {
-                if (attachment) {
-                    if (attachment.atc_resume) {
-                        const filename = attachment.atc_resume.split("/uploads")[1];
-                        const fileToDelete = `public/files/uploads/${filename}`;
-                        if (fs_1.default.existsSync(fileToDelete)) {
-                            try {
-                                fs_1.default.unlinkSync(fileToDelete);
-                                console.log(`File ${filename} deleted successfully.`);
-                            }
-                            catch (err) {
-                                console.error(`Error deleting file ${filename}: ${err}`);
-                            }
-                        }
-                        else {
-                            console.log(`File ${filename} not found.`);
-                        }
-                    }
-                }
                 attachmentData.atc_resume = `${req.protocol + "://" + req.get("host")}/files/uploads/${req.files[0].filename}`;
             }
             // check if attachment not null delete previous data
-            let attachmentId = attachment ? attachment.id : null;
-            if (attachmentId) {
+            let attachmentId = attachment ? attachment?.id : null;
+            if (attachment) {
                 await Attachment_1.default.update(attachmentData, { where: { id: attachmentId } });
-                (0, response_1.default)(200, "Success update attachment", seeker, res);
+                return (0, response_1.default)(200, "Success update attachment", seeker, res);
             }
             else {
                 // create new attachment
                 await Attachment_1.default.create(attachmentData).then(async function (result) {
                     await seeker.setAttachment(result);
-                    (0, response_1.default)(200, "Success update pengguna", seeker, res);
+                    return (0, response_1.default)(200, "Success membuat attachment baru", seeker, res);
                 });
             }
         }
-        else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
-        }
     }
     catch (error) {
-        console.error("Gagal memperbarui pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.setAttachment = setAttachment;
 const deleteAttachment = async (req, res) => {
     const seekerId = req.params.id;
-    const fieldName = req.params.fieldName;
+    const attachmentBody = req.body;
     try {
         const seeker = await Seeker_1.default.findByPk(seekerId);
+        if (!seeker)
+            return res.status(404).json({ message: "seeker not found" });
         if (seeker) {
             // Temukan pengalaman dengan ID tertentu yang dimiliki oleh seeker
             const attachmentData = (await seeker.getAttachment());
+            if (!attachmentData)
+                return res.status(404).json({ message: "attachment not found" });
             if (attachmentData) {
-                if (attachmentData[fieldName]) {
-                    attachmentData[fieldName] = null;
-                    await attachmentData.save();
-                    (0, response_1.default)(200, `${fieldName} berhasil dihapus`, seeker, res);
-                }
-                else {
-                    res.status(404).json({ error: `${fieldName} tidak ditemukan` });
-                }
+                attachmentData.update(attachmentBody);
+                return (0, response_1.default)(200, "success delete attachment field", [], res);
             }
-            else {
-                res.status(404).json({ error: "Attachment tidak ditemukan" });
-            }
-        }
-        else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
         }
     }
     catch (error) {
-        console.error("Gagal memperbarui pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        return res.status(500).json({ message: error.message });
     }
 };
 exports.deleteAttachment = deleteAttachment;
@@ -481,15 +339,14 @@ const addRecruiter = async (req, res) => {
     const recruiterData = req.body; // Data pembaruan pengguna dari permintaan PUT
     try {
         const seeker = await Seeker_1.default.findByPk(seekerId);
+        if (!seeker)
+            return res.status(404).json({ message: "seeker not found" });
         if (seeker) {
             await Recruiter_1.default.create(recruiterData).then(async function (result) {
                 await seeker.setRecruiter(result);
                 seeker.update({ role: "recruiter" });
                 (0, response_1.default)(200, "Success update pengguna", seeker, res);
             });
-        }
-        else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
         }
     }
     catch (error) {
@@ -515,15 +372,28 @@ const addSavedPost = async (req, res) => {
             }
         }
         else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
+            res.status(404).json({ message: "seeker not found" });
         }
     }
     catch (error) {
-        console.error("Gagal memperbarui pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.addSavedPost = addSavedPost;
+const getAllSavedPostBySeekerId = async (req, res) => {
+    const seekerId = req.params.id;
+    try {
+        const seeker = await Seeker_1.default.findByPk(seekerId);
+        if (!seeker)
+            return res.status(404).json({ message: "seeker not found" });
+        const SAVED_POST = await seeker.getSaved();
+        return (0, response_1.default)(200, "success get all saved post", SAVED_POST, res);
+    }
+    catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+exports.getAllSavedPostBySeekerId = getAllSavedPostBySeekerId;
 // Seeker Apply Post
 const addApplied = async (req, res) => {
     const seekerId = req.params.id;
@@ -532,27 +402,11 @@ const addApplied = async (req, res) => {
     try {
         const seeker = await Seeker_1.default.findByPk(seekerId);
         const post = await Post_1.default.findByPk(postId);
+        if (!seeker)
+            return res.status(404).json({ message: "seeker not found" });
         let attachment = (await seeker.getAttachment());
         seekerData.atc_resume = attachment ? attachment.atc_resume : null;
         if (req.files.length !== 0) {
-            if (attachment) {
-                if (attachment.atc_resume) {
-                    const filename = attachment.atc_resume.split("/uploads")[1];
-                    const fileToDelete = `public/files/uploads/${filename}`;
-                    if (fs_1.default.existsSync(fileToDelete)) {
-                        try {
-                            fs_1.default.unlinkSync(fileToDelete);
-                            console.log(`File ${filename} deleted successfully.`);
-                        }
-                        catch (err) {
-                            console.error(`Error deleting file ${filename}: ${err}`);
-                        }
-                    }
-                    else {
-                        console.log(`File ${filename} not found.`);
-                    }
-                }
-            }
             seekerData.atc_resume = `${req.protocol + "://" + req.get("host")}/files/uploads/${req.files[0].filename}`;
         }
         let attachmentId = attachment ? attachment.id : null;
@@ -570,28 +424,26 @@ const addApplied = async (req, res) => {
             let applied = await seeker.getApplied({ where: { id: postId } });
             return res.send(applied[0]);
         }
-        else {
-            res.status(404).json({ error: "Pengguna tidak ditemukan" });
-        }
     }
     catch (error) {
-        console.error("Gagal memperbarui pengguna:", error);
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.addApplied = addApplied;
-function getFormattedToday() {
-    const today = new Date();
-    const year = today.getFullYear();
-    let month = today.getMonth() + 1;
-    let day = today.getDate();
-    // Padding digit bulan dan tanggal dengan '0' jika diperlukan
-    month = month < 10 ? '0' + month : month;
-    day = day < 10 ? '0' + day : day;
-    // Menggabungkan tahun, bulan, dan tanggal dengan format yang diinginkan
-    const formattedToday = `${year}-${month}-${day}`;
-    return formattedToday;
-}
+const getAllAppliedPostBySeekerId = async (req, res) => {
+    const seekerId = req.params.id;
+    try {
+        const seeker = await Seeker_1.default.findByPk(seekerId);
+        if (!seeker)
+            return res.status(404).json({ message: "seeker not found" });
+        const APPLIED_POST = await seeker.getApplied();
+        return (0, response_1.default)(200, "success get all applied post", APPLIED_POST, res);
+    }
+    catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+exports.getAllAppliedPostBySeekerId = getAllAppliedPostBySeekerId;
 const MAILER_EMAIL = process.env.MAILER_EMAIL;
 const MAILER_NAME = process.env.MAILER_NAME;
 const sendWelcomeEmail = async (userEmail, userName) => {

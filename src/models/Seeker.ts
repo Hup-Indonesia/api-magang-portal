@@ -43,6 +43,7 @@ class Seeker extends Model {
   declare addSaved: BelongsToManyAddAssociationMixin<Post, number>
   declare removeSaved: BelongsToManyRemoveAssociationMixin<Post,number>
   declare setSaved: BelongsToManySetAssociationsMixin<Post,number>
+  declare getSaved: BelongsToManyGetAssociationsMixin<Post>
 
   // Mixin Experience Has Many
   declare addApplied: BelongsToManyAddAssociationMixin<Post, number>

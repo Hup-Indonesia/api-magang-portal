@@ -108,43 +108,45 @@ import seekerpostRouter from "./router/seekerpost.router";
 import verificationRouter from "./router/verification.router";
 import superRouter from "./router/super.router";
 import authRouter from "./router/auth.router"
+import experienceRouter from "./router/experiences.router"
+import educationRouter from "./router/educations.router"
 
 app.use(cors())
 app.use(express.json());
 app.use(cookieParser());
 app.use(multer({ storage: storage, limits: { fileSize: 2097152 } }).any());
 app.enable("trust proxy");
-app.use(helmet());
+// app.use(helmet());
 
 
-const cspOptions = {
-  directives: {
-    defaultSrc: ["'self'"],
-    imgSrc: ["'self'", "data:", "blob:", "lh3.googleusercontent.com"], // Menambahkan "blob:"
-    scriptSrc: [
-      "'self'",
-      'code.jquery.com',
-      'cdnjs.cloudflare.com',
-      'cdn.datatables.net',
-      "cdn.jsdelivr.net",
-      "cdn.quilljs.com"
-    ],
-  },
-};
+// const cspOptions = {
+//   directives: {
+//     defaultSrc: ["'self'"],
+//     imgSrc: ["'self'", "data:", "blob:", "lh3.googleusercontent.com"], // Menambahkan "blob:"
+//     scriptSrc: [
+//       "'self'",
+//       'code.jquery.com',
+//       'cdnjs.cloudflare.com',
+//       'cdn.datatables.net',
+//       "cdn.jsdelivr.net",
+//       "cdn.quilljs.com"
+//     ],
+//   },
+// };
 
 
 // Aktifkan opsi HSTS untuk memaksa redirect dari HTTP ke HTTPS
-app.use(
-  helmet.hsts({
-    maxAge: 31536000, // 1 tahun
-    includeSubDomains: true,
-    preload: true,
-  })
-);
-app.use(helmet({
-  xFrameOptions: { action: "deny" },
-}));
-app.use(helmet.contentSecurityPolicy(cspOptions));
+// app.use(
+//   helmet.hsts({
+//     maxAge: 31536000, // 1 tahun
+//     includeSubDomains: true,
+//     preload: true,
+//   })
+// );
+// app.use(helmet({
+//   xFrameOptions: { action: "deny" },
+// }));
+// app.use(helmet.contentSecurityPolicy(cspOptions));
 
 
 
@@ -169,6 +171,8 @@ connectToDatabase()
     app.use(`/magang-portal/${VERSION_API}/verification`, verificationRouter);
     app.use(`/magang-portal/${VERSION_API}/super`, superRouter);
     app.use(`/magang-portal/${VERSION_API}/auth`, authRouter);
+    app.use(`/magang-portal/${VERSION_API}/experiences`, experienceRouter);
+    app.use(`/magang-portal/${VERSION_API}/educations`, educationRouter);
     app.listen(PORT, () => {
       console.log(`Server berjalan di http://localhost:${PORT}`);
     });
