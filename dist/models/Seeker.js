@@ -34,7 +34,6 @@ Seeker.init({
     email: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false,
-        unique: true,
         defaultValue: ""
     },
     mobile: sequelize_1.DataTypes.STRING,

@@ -26,13 +26,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllAppliedPostBySeekerId = exports.addApplied = exports.getAllSavedPostBySeekerId = exports.addSavedPost = exports.addRecruiter = exports.deleteAttachment = exports.setAttachment = exports.getAttachmentBySeekerId = exports.getEducationsBySeekerId = exports.addEducation = exports.addExperience = exports.getExperienceBySeekerId = exports.deleteSeeker = exports.updateSeeker = exports.logoutSeeker = exports.loginSeeker = exports.createSeeker = exports.getSeekerById = exports.getAllSeeker = void 0;
+exports.getAllAppliedPostBySeekerId = exports.addApplied = exports.getAllSavedPostBySeekerId = exports.addSavedPost = exports.addRecruiter = exports.deleteAttachment = exports.setAttachment = exports.getAttachmentBySeekerId = exports.getEducationsBySeekerId = exports.addEducation = exports.addExperience = exports.getExperienceBySeekerId = exports.deleteSeeker = exports.forgetPasswordWithEmail = exports.updateSeeker = exports.getSeekerById = exports.getAllSeeker = void 0;
 const Seeker_1 = __importDefault(require("../models/Seeker"));
 const Experience_1 = __importDefault(require("../models/Experience"));
 const Education_1 = __importDefault(require("../models/Education"));
 const response_1 = __importDefault(require("./response"));
 const bcrypt = __importStar(require("bcrypt"));
-const JWT_1 = require("../config/JWT");
 const Attachment_1 = __importDefault(require("../models/Attachment"));
 const path_1 = __importDefault(require("path"));
 const Recruiter_1 = __importDefault(require("../models/Recruiter"));
@@ -48,7 +47,7 @@ const getAllSeeker = async (req, res) => {
         const seeker = await Seeker_1.default.findAll({
             limit: +db_limit,
             offset: (+db_page - 1) * +db_limit,
-            attributes: { exclude: ["createdAt", "updatedAt", "password"] }
+            attributes: { exclude: ["createdAt", "updatedAt", "password"] },
         });
         return res.status(200).json({
             status_code: 200,
@@ -67,20 +66,75 @@ exports.getAllSeeker = getAllSeeker;
 const getSeekerById = async (req, res) => {
     const seekerId = req.params.id;
     try {
-        const mahasiswa = await Seeker_1.default.findByPk(seekerId, { attributes: { exclude: ["createdAt", "updatedAt", "password"] }, include: [
-                { model: Experience_1.default, as: "experiences", attributes: { exclude: ["createdAt", "updatedAt"] } },
-                { model: Education_1.default, as: "educations", attributes: { exclude: ["createdAt", "updatedAt"] } },
-                { model: Attachment_1.default, as: "attachment", attributes: { exclude: ["createdAt", "updatedAt"] } },
-                { model: Recruiter_1.default, as: "recruiter", attributes: { exclude: ["createdAt", "updatedAt"] } },
-                { model: Post_1.default, as: "applied", attributes: { exclude: ["createdAt", "updatedAt"] }, include: [
-                        { model: Recruiter_1.default, as: "recruiter", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] }, through: { attributes: [] } },
-                    ] },
-                { model: Post_1.default, as: "saved", attributes: { exclude: ["createdAt", "updatedAt"] }, include: [
-                        { model: Recruiter_1.default, as: "recruiter", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] }, through: { attributes: [] } },
-                        { model: Seeker_1.default, as: "applicants", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] } },
-                        { model: Seeker_1.default, as: "saved", attributes: { exclude: ["createdAt", "updatedAt", "ownerId"] } },
-                    ] },
-            ] });
+        const mahasiswa = await Seeker_1.default.findByPk(seekerId, {
+            attributes: { exclude: ["createdAt", "updatedAt", "password"] },
+            include: [
+                {
+                    model: Experience_1.default,
+                    as: "experiences",
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                },
+                {
+                    model: Education_1.default,
+                    as: "educations",
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                },
+                {
+                    model: Attachment_1.default,
+                    as: "attachment",
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                },
+                {
+                    model: Recruiter_1.default,
+                    as: "recruiter",
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                },
+                {
+                    model: Post_1.default,
+                    as: "applied",
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                    include: [
+                        {
+                            model: Recruiter_1.default,
+                            as: "recruiter",
+                            attributes: {
+                                exclude: ["createdAt", "updatedAt", "ownerId"],
+                            },
+                            through: { attributes: [] },
+                        },
+                    ],
+                },
+                {
+                    model: Post_1.default,
+                    as: "saved",
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                    include: [
+                        {
+                            model: Recruiter_1.default,
+                            as: "recruiter",
+                            attributes: {
+                                exclude: ["createdAt", "updatedAt", "ownerId"],
+                            },
+                            through: { attributes: [] },
+                        },
+                        {
+                            model: Seeker_1.default,
+                            as: "applicants",
+                            attributes: {
+                                exclude: ["createdAt", "updatedAt", "ownerId"],
+                            },
+                        },
+                        {
+                            model: Seeker_1.default,
+                            as: "saved",
+                            attributes: {
+                                exclude: ["createdAt", "updatedAt", "ownerId"],
+                            },
+                        },
+                    ],
+                },
+            ],
+        });
         if (!mahasiswa)
             return res.status(404).json({ message: "seeker not found" });
         return (0, response_1.default)(200, `success get customer by id`, mahasiswa, res);
@@ -90,75 +144,10 @@ const getSeekerById = async (req, res) => {
     }
 };
 exports.getSeekerById = getSeekerById;
-// Fungsi ini membuat pengguna baru
-const createSeeker = async (req, res) => {
-    const seekerData = req.body; // Anda akan mendapatkan data pengguna dari permintaan POST
-    seekerData.role = "seeker";
-    try {
-        hashPassword(seekerData.password)
-            .then(async (hashedPassword) => {
-            seekerData.password = hashedPassword;
-            let newSeeker = await Seeker_1.default.create(seekerData);
-            // Membut cookies untuk login
-            const accessToken = (0, JWT_1.createToken)(newSeeker);
-            res.cookie("access-token", accessToken, {
-                maxAge: 3600000,
-            });
-            // HERE
-            sendWelcomeEmail(seekerData.email, seekerData.first_name);
-            (0, response_1.default)(201, "success create new users", newSeeker, res);
-        })
-            .catch((error) => {
-            res.status(500).json({ message: error.message });
-        });
-    }
-    catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-exports.createSeeker = createSeeker;
-const loginSeeker = async (req, res) => {
-    const seekerData = req.body; // Anda akan mendapatkan data pengguna dari permintaan POST
-    try {
-        let seeker = await Seeker_1.default.findOne({
-            where: {
-                email: seekerData.email
-            }
-        });
-        if (!seeker)
-            return (0, response_1.default)(400, "seeker not found", [], res);
-        bcrypt.compare(seekerData.password, seeker.password).then((match) => {
-            if (!match) {
-                return res.json({ error: "wrong username and password combination" });
-            }
-            else {
-                const accessToken = (0, JWT_1.createToken)(seeker);
-                res.cookie("access-token", accessToken, {
-                    maxAge: 360000000,
-                });
-                return (0, response_1.default)(200, "success login", seeker, res);
-            }
-        });
-    }
-    catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-exports.loginSeeker = loginSeeker;
-const logoutSeeker = async (req, res) => {
-    try {
-        res.clearCookie("access-token");
-        return res.redirect("/");
-    }
-    catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-exports.logoutSeeker = logoutSeeker;
 // Fungsi ini memperbarui pengguna berdasarkan ID
 const updateSeeker = async (req, res) => {
     const seekerId = req.params.id;
-    const updatedSeeker = req.body; // Data pembaruan pengguna dari permintaan PUT  
+    const updatedSeeker = req.body; // Data pembaruan pengguna dari permintaan PUT
     try {
         const seeker = await Seeker_1.default.findByPk(seekerId);
         if (!seeker)
@@ -174,6 +163,40 @@ const updateSeeker = async (req, res) => {
     }
 };
 exports.updateSeeker = updateSeeker;
+const forgetPasswordWithEmail = async (req, res) => {
+    const updatedSeeker = req.body; // Data pembaruan pengguna dari permintaan PUT
+    try {
+        if (!updatedSeeker.email)
+            return res.status(400).json({ message: "email required" });
+        if (!updatedSeeker.password)
+            return res.status(400).json({ message: "password required" });
+        const seeker = await Seeker_1.default.findOne({
+            where: {
+                email: updatedSeeker.email,
+            },
+        });
+        if (!seeker)
+            return res.status(404).json({ message: "seeker not found !" });
+        if (seeker) {
+            hashPassword(updatedSeeker.password)
+                .then(async (hashedPassword) => {
+                await seeker.update({ password: hashedPassword });
+                return res
+                    .status(200)
+                    .json({ message: "success update user password" });
+            })
+                .catch((error) => {
+                console.error("Gagal membuat pengguna:", error);
+                return res.status(500).json({ error: error.message });
+            });
+        }
+    }
+    catch (error) {
+        console.error("Gagal memperbarui pengguna:", error);
+        return res.status(500).json({ error: error.message });
+    }
+};
+exports.forgetPasswordWithEmail = forgetPasswordWithEmail;
 // Fungsi ini menghapus pengguna berdasarkan ID
 const deleteSeeker = async (req, res) => {
     const seekerId = req.params.id;
@@ -198,7 +221,7 @@ const hashPassword = async (plainPassword) => {
         return hashedPassword;
     }
     catch (error) {
-        throw new Error('Error hashing password');
+        throw new Error("Error hashing password");
     }
 };
 // EXPERIENCES
@@ -281,7 +304,9 @@ const getAttachmentBySeekerId = async (req, res) => {
         const seeker = await Seeker_1.default.findByPk(seekerId);
         if (!seeker)
             return res.status(404).json({ message: "seeker not found" });
-        const ATTACHMENT = await seeker.getAttachment({ attributes: { exclude: ["createdAt", "updatedAt"] } });
+        const ATTACHMENT = await seeker.getAttachment({
+            attributes: { exclude: ["createdAt", "updatedAt"] },
+        });
         return (0, response_1.default)(200, "success get attachment", ATTACHMENT, res);
     }
     catch (error) {
@@ -299,14 +324,18 @@ const setAttachment = async (req, res) => {
         if (seeker) {
             // if user upload file resume
             let attachment = await seeker.getAttachment();
-            attachmentData.atc_resume = attachment ? attachment.atc_resume : null;
+            attachmentData.atc_resume = attachment
+                ? attachment.atc_resume
+                : null;
             if (req.files.length !== 0) {
                 attachmentData.atc_resume = `${req.protocol + "://" + req.get("host")}/files/uploads/${req.files[0].filename}`;
             }
             // check if attachment not null delete previous data
             let attachmentId = attachment ? attachment?.id : null;
             if (attachment) {
-                await Attachment_1.default.update(attachmentData, { where: { id: attachmentId } });
+                await Attachment_1.default.update(attachmentData, {
+                    where: { id: attachmentId },
+                });
                 return (0, response_1.default)(200, "Success update attachment", seeker, res);
             }
             else {
@@ -332,9 +361,11 @@ const deleteAttachment = async (req, res) => {
             return res.status(404).json({ message: "seeker not found" });
         if (seeker) {
             // Temukan pengalaman dengan ID tertentu yang dimiliki oleh seeker
-            const attachmentData = (await seeker.getAttachment());
+            const attachmentData = await seeker.getAttachment();
             if (!attachmentData)
-                return res.status(404).json({ message: "attachment not found" });
+                return res
+                    .status(404)
+                    .json({ message: "attachment not found" });
             if (attachmentData) {
                 attachmentData.update(attachmentBody);
                 return (0, response_1.default)(200, "success delete attachment field", [], res);
@@ -399,7 +430,23 @@ const getAllSavedPostBySeekerId = async (req, res) => {
         const seeker = await Seeker_1.default.findByPk(seekerId);
         if (!seeker)
             return res.status(404).json({ message: "seeker not found" });
-        const SAVED_POST = await seeker.getSaved();
+        const SAVED_POST = await seeker.getSaved({
+            attributes: { exclude: ["createdAt", "updatedAt"] },
+            include: [
+                {
+                    model: Recruiter_1.default,
+                    as: "recruiter",
+                    attributes: [
+                        "id",
+                        "rec_org_name",
+                        "rec_org_website",
+                        "rec_org_logo",
+                        "rec_mode",
+                    ],
+                    through: { attributes: [] },
+                },
+            ],
+        });
         return (0, response_1.default)(200, "success get all saved post", SAVED_POST, res);
     }
     catch (error) {
@@ -417,7 +464,7 @@ const addApplied = async (req, res) => {
         const post = await Post_1.default.findByPk(postId);
         if (!seeker)
             return res.status(404).json({ message: "seeker not found" });
-        let attachment = (await seeker.getAttachment());
+        let attachment = await seeker.getAttachment();
         seekerData.atc_resume = attachment ? attachment.atc_resume : null;
         if (req.files.length !== 0) {
             seekerData.atc_resume = `${req.protocol + "://" + req.get("host")}/files/uploads/${req.files[0].filename}`;
@@ -425,7 +472,9 @@ const addApplied = async (req, res) => {
         let attachmentId = attachment ? attachment.id : null;
         if (seeker) {
             if (attachmentId) {
-                await Attachment_1.default.update(seekerData, { where: { id: attachmentId } });
+                await Attachment_1.default.update(seekerData, {
+                    where: { id: attachmentId },
+                });
             }
             else {
                 // create new attachment
@@ -449,7 +498,38 @@ const getAllAppliedPostBySeekerId = async (req, res) => {
         const seeker = await Seeker_1.default.findByPk(seekerId);
         if (!seeker)
             return res.status(404).json({ message: "seeker not found" });
-        const APPLIED_POST = await seeker.getApplied();
+        const APPLIED_POST = await seeker.getApplied({
+            attributes: {
+                exclude: [
+                    "post_deadline",
+                    "post_postdate",
+                    "post_view",
+                    "post_need",
+                    "post_link",
+                    "post_mode",
+                    "post_resume_req",
+                    "post_portfolio_req",
+                    "post_overview",
+                    "post_responsibility",
+                    "post_requirement",
+                    "createdAt",
+                    "updatedAt",
+                ],
+            },
+            include: [
+                {
+                    model: Recruiter_1.default,
+                    as: "recruiter",
+                    attributes: [
+                        "rec_org_name",
+                        "rec_org_website",
+                        "rec_org_logo",
+                        "rec_mode",
+                    ],
+                    through: { attributes: [] },
+                },
+            ],
+        });
         return (0, response_1.default)(200, "success get all applied post", APPLIED_POST, res);
     }
     catch (error) {
@@ -520,12 +600,14 @@ const sendWelcomeEmail = async (userEmail, userName) => {
         to: userEmail,
         subject: `Haloo ${userName}! Selamat bergabung`,
         html: emailHTML,
-        attachments: [{
+        attachments: [
+            {
                 filename: "Logo.png",
                 path: path_1.default.resolve(__dirname + "/Logo.png"),
-                cid: 'logo',
-                contentDisposition: "inline"
-            }]
+                cid: "logo",
+                contentDisposition: "inline",
+            },
+        ],
     });
     console.log("Message sent: %s", info.messageId);
 };

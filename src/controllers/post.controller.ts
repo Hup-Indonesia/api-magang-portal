@@ -22,9 +22,9 @@ export const getAllPost = async (req: Request, res: Response) => {
         limit: +db_limit,
         offset: (+db_page - 1) * +db_limit,
         attributes:{exclude:["createdAt","updatedAt"]}, include:[
-          {model:Recruiter, as: "recruiter",attributes:["rec_org_name", "rec_org_website", "rec_org_logo", "rec_mode"], through:{attributes:[]}},
+          {model:Recruiter, as: "recruiter",attributes:["id", "rec_org_name", "rec_org_website", "rec_org_logo", "rec_mode"], through:{attributes:[]}},
           {model:Seeker, as: "applicants",attributes:["id", "first_name", "last_name", "email", "profile_picture"]},
-          {model:Seeker, as: "saved",attributes:["id", "first_name", "last_name", "email", "profile_picture"]},
+          {model:Seeker, as: "saved",attributes:["id", "first_name", "last_name", "email", "profile_picture"], through:{attributes:[]}},
       ]});
       
 

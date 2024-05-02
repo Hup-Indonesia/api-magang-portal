@@ -2,12 +2,13 @@ import { Request, Response } from "express";
 import transporter from "../config/Mailer"
 import path from "path";
 import * as dotenv from "dotenv";
+import Verification from "../models/VerificationCode";
 dotenv.config();
 
 const MAILER_EMAIL = process.env.MAILER_EMAIL
 const MAILER_NAME = process.env.MAILER_NAME
 
-const sendVerificationEmail = async (userEmail, verificationCode) => {
+const sendVerificationCodeToEmail = async (userEmail, verificationCode) => {
   const emailHTML = `
   <!DOCTYPE html>
   <html lang="en">
@@ -79,11 +80,53 @@ const sendVerificationEmail = async (userEmail, verificationCode) => {
   console.log("Message sent: %s", info.messageId);
 };
 
-export const SendVerification = async (req: Request, res: Response) => {
-  const userEmail = req.params.email
+export const SendVerificationEmail = async (req: Request, res: Response) => {
+  const userEmail = req.query.email
   const verificationCode = generateRandomNumber();
-  sendVerificationEmail(userEmail, verificationCode)
-  res.send(verificationCode)
+  try {
+    sendVerificationCodeToEmail(userEmail, verificationCode)
+    const USER = await Verification.findOne({where:{
+      verification_email: userEmail
+    }})
+
+    if(!USER){
+      await Verification.create({
+        verification_email: userEmail,
+        verification_code: verificationCode
+      })
+    }else{
+      USER.update({
+        verification_code: verificationCode
+      })
+    }
+
+    return res.status(200).send({
+      message: "Verification Code berhasil dikirim"
+    })
+  } catch (error) {
+    return res.status(500).json({message: error.message})
+  }
+};
+
+export const VerifyVerificationCode = async (req: Request, res: Response) => {
+  const verification_email = req.body.email
+  const verification_code = req.body.code
+  try {
+    const USER = await Verification.findOne({where:{
+      verification_email: verification_email
+    }})
+
+    if(!USER) return res.status(400).json({message: "Email Address Not Found !"})
+    if(USER.verification_code !== verification_code) return res.status(400).json({message: "Wrong Verification Code !"})
+
+    if(USER.verification_code == verification_code){
+      return res.status(200).send({
+        message: "Your Email Address was Successfuly Verified"
+      })
+    }
+  } catch (error) {
+    return res.status(500).json({message: error.message})
+  }
 };
 
 

@@ -31,13 +31,13 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const multer_1 = __importDefault(require("multer"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
-const cors_1 = __importDefault(require("cors"));
 const passport_1 = __importDefault(require("passport"));
 const passport_google_oauth20_1 = require("passport-google-oauth20");
 const dotenv = __importStar(require("dotenv"));
 const Seeker_1 = __importDefault(require("./models/Seeker"));
-const JWT_1 = require("./config/JWT");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const Mailer_1 = __importDefault(require("./config/Mailer"));
+const cors_1 = __importDefault(require("cors"));
 dotenv.config();
 const MAILER_EMAIL = process.env.MAILER_EMAIL;
 const MAILER_NAME = process.env.MAILER_NAME;
@@ -51,36 +51,52 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
     // Lakukan sesuatu dengan data profil pengguna, seperti menyimpan di database
     const email = profile.emails[0].value;
     if (!email) {
-        throw new Error('Login failed');
+        throw new Error("Login failed");
     }
     const existingUser = await Seeker_1.default.findOne({ where: { email } });
     if (existingUser) {
-        const accessToken = (0, JWT_1.createToken)(existingUser);
-        Object.assign(profile, { accessToken });
+        // Membuat token yang disimpan kedalam REQ.USER
+        console.log("EXIST");
+        const accessToken = jsonwebtoken_1.default.sign({
+            id: existingUser.id
+        }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+        const refreshToken = jsonwebtoken_1.default.sign({
+            id: existingUser.id
+        }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "3d" });
+        // Menambahkan key value token kedalam object profile
+        Object.assign(profile, { accessToken, refreshToken });
         return done(null, profile);
     }
     else {
+        console.log("NOT EXIST");
+        // Membuat User ketika user yang login menggunakan google sebelumnya belum ada
         let SEEKER = await Seeker_1.default.create({
             first_name: profile.name.givenName,
             last_name: profile.name.familyName,
             email: profile.emails[0].value,
             profile_picture: profile.photos[0].value,
-            role: "seeker"
+            role: "seeker",
         });
-        const accessToken = (0, JWT_1.createToken)(SEEKER);
-        Object.assign(profile, { accessToken });
+        // Membuat token yang disimpan kedalam REQ.USER
+        const accessToken = jsonwebtoken_1.default.sign({
+            id: SEEKER.id
+        }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+        const refreshToken = jsonwebtoken_1.default.sign({
+            id: SEEKER.id
+        }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "3d" });
+        // Menambahkan key value token kedalam object profile
+        Object.assign(profile, { accessToken, refreshToken });
         sendWelcomeEmail(profile.emails[0].value, profile.name.givenName);
         return done(null, profile);
     }
 }));
 app.use(passport_1.default.initialize());
-app.get('/api/google', passport_1.default.authenticate('google', { scope: ['profile', 'email'] }));
-app.get('/api/google/callback', passport_1.default.authenticate('google', { failureRedirect: '/login', session: false }), (req, res) => {
-    // Di sini, Anda dapat mengarahkan pengguna atau melakukan sesuatu setelah otentikasi sukses
-    res.cookie("access-token", req.user.accessToken, {
-        maxAge: 360000000,
+app.get("/api/google", passport_1.default.authenticate("google", { scope: ["profile", "email"] }));
+app.get("/api/google/callback", passport_1.default.authenticate("google", { failureRedirect: "/login", session: false, }), (req, res) => {
+    return res.status(200).json({
+        accessToken: req.user.accessToken,
+        refreshToken: req.user.refreshToken
     });
-    res.redirect("/seeker/profile");
 });
 // for image upload
 if (!fs_1.default.existsSync("public/files/uploads")) {
@@ -113,38 +129,13 @@ const super_router_1 = __importDefault(require("./router/super.router"));
 const auth_router_1 = __importDefault(require("./router/auth.router"));
 const experiences_router_1 = __importDefault(require("./router/experiences.router"));
 const educations_router_1 = __importDefault(require("./router/educations.router"));
-app.use((0, cors_1.default)());
+app.use((0, cors_1.default)({
+    origin: "*",
+}));
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 app.use((0, multer_1.default)({ storage: storage, limits: { fileSize: 2097152 } }).any());
 app.enable("trust proxy");
-// app.use(helmet());
-// const cspOptions = {
-//   directives: {
-//     defaultSrc: ["'self'"],
-//     imgSrc: ["'self'", "data:", "blob:", "lh3.googleusercontent.com"], // Menambahkan "blob:"
-//     scriptSrc: [
-//       "'self'",
-//       'code.jquery.com',
-//       'cdnjs.cloudflare.com',
-//       'cdn.datatables.net',
-//       "cdn.jsdelivr.net",
-//       "cdn.quilljs.com"
-//     ],
-//   },
-// };
-// Aktifkan opsi HSTS untuk memaksa redirect dari HTTP ke HTTPS
-// app.use(
-//   helmet.hsts({
-//     maxAge: 31536000, // 1 tahun
-//     includeSubDomains: true,
-//     preload: true,
-//   })
-// );
-// app.use(helmet({
-//   xFrameOptions: { action: "deny" },
-// }));
-// app.use(helmet.contentSecurityPolicy(cspOptions));
 // konfigurasi static item dalam public folder
 app.use("/", express_1.default.static(path_1.default.join(__dirname, "../public")));
 // konfigurasi view engine "EJS"
@@ -234,12 +225,14 @@ const sendWelcomeEmail = async (userEmail, userName) => {
         to: userEmail,
         subject: `Haloo ${userName}! Selamat bergabung`,
         html: emailHTML,
-        attachments: [{
+        attachments: [
+            {
                 filename: "Logo.png",
                 path: path_1.default.resolve(__dirname + "/Logo.png"),
-                cid: 'logo',
-                contentDisposition: "inline"
-            }]
+                cid: "logo",
+                contentDisposition: "inline",
+            },
+        ],
     });
     console.log("Message sent: %s", info.messageId);
 };

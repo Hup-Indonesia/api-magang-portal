@@ -23,9 +23,9 @@ const getAllPost = async (req, res) => {
             limit: +db_limit,
             offset: (+db_page - 1) * +db_limit,
             attributes: { exclude: ["createdAt", "updatedAt"] }, include: [
-                { model: Recruiter_1.default, as: "recruiter", attributes: ["rec_org_name", "rec_org_website", "rec_org_logo", "rec_mode"], through: { attributes: [] } },
+                { model: Recruiter_1.default, as: "recruiter", attributes: ["id", "rec_org_name", "rec_org_website", "rec_org_logo", "rec_mode"], through: { attributes: [] } },
                 { model: Seeker_1.default, as: "applicants", attributes: ["id", "first_name", "last_name", "email", "profile_picture"] },
-                { model: Seeker_1.default, as: "saved", attributes: ["id", "first_name", "last_name", "email", "profile_picture"] },
+                { model: Seeker_1.default, as: "saved", attributes: ["id", "first_name", "last_name", "email", "profile_picture"], through: { attributes: [] } },
             ]
         });
         let filtered_data = POST.filter(post => {

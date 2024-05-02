@@ -85,6 +85,10 @@ Post.init(
     post_overview: DataTypes.TEXT,
     post_responsibility: DataTypes.TEXT,
     post_requirement: DataTypes.TEXT,
+    token_used: {
+      type: DataTypes.STRING,
+      defaultValue: "Free"
+    },
 
     // timestamps
     createdAt: DataTypes.DATE,

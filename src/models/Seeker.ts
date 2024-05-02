@@ -93,7 +93,6 @@ Seeker.init(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
       defaultValue:""
     },
     mobile: DataTypes.STRING,

@@ -1,9 +1,10 @@
 import express from "express";
-import { SendVerification } from "../controllers/verification.controller";
+import { SendVerificationEmail, VerifyVerificationCode } from "../controllers/verification.controller";
     
 const verificationRouter = express.Router();
 
-verificationRouter.post("/:email", SendVerification)
+verificationRouter.get("/request", SendVerificationEmail)
+verificationRouter.post("/verify", VerifyVerificationCode)
     
 export default verificationRouter;
     

@@ -51,6 +51,10 @@ Post.init({
     post_overview: sequelize_1.DataTypes.TEXT,
     post_responsibility: sequelize_1.DataTypes.TEXT,
     post_requirement: sequelize_1.DataTypes.TEXT,
+    token_used: {
+        type: sequelize_1.DataTypes.STRING,
+        defaultValue: "Free"
+    },
     // timestamps
     createdAt: sequelize_1.DataTypes.DATE,
     updatedAt: sequelize_1.DataTypes.DATE,

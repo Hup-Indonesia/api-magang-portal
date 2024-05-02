@@ -1,5 +1,4 @@
 import express, {Request, Response} from "express";
-import { SendVerification } from "../controllers/verification.controller";
 import * as dotenv from "dotenv";
 import { createTokenSuper } from "../config/JWT";
 dotenv.config();

@@ -26,14 +26,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SendVerification = void 0;
+exports.VerifyVerificationCode = exports.SendVerificationEmail = void 0;
 const Mailer_1 = __importDefault(require("../config/Mailer"));
 const path_1 = __importDefault(require("path"));
 const dotenv = __importStar(require("dotenv"));
+const VerificationCode_1 = __importDefault(require("../models/VerificationCode"));
 dotenv.config();
 const MAILER_EMAIL = process.env.MAILER_EMAIL;
 const MAILER_NAME = process.env.MAILER_NAME;
-const sendVerificationEmail = async (userEmail, verificationCode) => {
+const sendVerificationCodeToEmail = async (userEmail, verificationCode) => {
     const emailHTML = `
   <!DOCTYPE html>
   <html lang="en">
@@ -103,13 +104,56 @@ const sendVerificationEmail = async (userEmail, verificationCode) => {
     });
     console.log("Message sent: %s", info.messageId);
 };
-const SendVerification = async (req, res) => {
-    const userEmail = req.params.email;
+const SendVerificationEmail = async (req, res) => {
+    const userEmail = req.query.email;
     const verificationCode = generateRandomNumber();
-    sendVerificationEmail(userEmail, verificationCode);
-    res.send(verificationCode);
+    try {
+        sendVerificationCodeToEmail(userEmail, verificationCode);
+        const USER = await VerificationCode_1.default.findOne({ where: {
+                verification_email: userEmail
+            } });
+        if (!USER) {
+            await VerificationCode_1.default.create({
+                verification_email: userEmail,
+                verification_code: verificationCode
+            });
+        }
+        else {
+            USER.update({
+                verification_code: verificationCode
+            });
+        }
+        return res.status(200).send({
+            message: "Verification Code berhasil dikirim"
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
 };
-exports.SendVerification = SendVerification;
+exports.SendVerificationEmail = SendVerificationEmail;
+const VerifyVerificationCode = async (req, res) => {
+    const verification_email = req.body.email;
+    const verification_code = req.body.code;
+    try {
+        const USER = await VerificationCode_1.default.findOne({ where: {
+                verification_email: verification_email
+            } });
+        if (!USER)
+            return res.status(400).json({ message: "Email Address Not Found !" });
+        if (USER.verification_code !== verification_code)
+            return res.status(400).json({ message: "Wrong Verification Code !" });
+        if (USER.verification_code == verification_code) {
+            return res.status(200).send({
+                message: "Your Email Address was Successfuly Verified"
+            });
+        }
+    }
+    catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+exports.VerifyVerificationCode = VerifyVerificationCode;
 function generateRandomNumber() {
     const randomNumber = Math.floor(100000 + Math.random() * 900000);
     return randomNumber.toString();

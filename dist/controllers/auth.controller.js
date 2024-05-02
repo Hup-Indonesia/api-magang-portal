@@ -46,8 +46,8 @@ const Register = async (req, res) => {
             .then(async (hashedPassword) => {
             seekerData.password = hashedPassword;
             let newSeeker = await Seeker_1.default.create(seekerData);
-            const accessToken = jsonwebtoken_1.default.sign({ id: newSeeker.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15s" });
-            const refreshToken = jsonwebtoken_1.default.sign({ id: newSeeker.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "1d" });
+            const accessToken = jsonwebtoken_1.default.sign({ id: newSeeker.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+            const refreshToken = jsonwebtoken_1.default.sign({ id: newSeeker.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "3d" });
             // sendWelcomeEmail(seekerData.email, seekerData.first_name)
             res.status(201).json({ accessToken, refreshToken });
         })
@@ -81,18 +81,18 @@ const Login = async (req, res) => {
             return res.status(401).json({ message: "wrong password" });
         const accessToken = jsonwebtoken_1.default.sign({
             id: SEEKER.id
-        }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15s" });
+        }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
         const refreshToken = jsonwebtoken_1.default.sign({
             id: SEEKER.id
-        }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "1d" });
+        }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "3d" });
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
-        res.json({ accessToken, refreshToken });
+        return res.json({ accessToken, refreshToken });
     }
     catch (error) {
-        res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
 };
 exports.Login = Login;
@@ -109,7 +109,7 @@ const Refresh = async (req, res) => {
                 return res.status(400).json({ message: "user not found on refresh token" });
             const accessToken = jsonwebtoken_1.default.sign({
                 id: decoded.id
-            }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15s" });
+            }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
             res.json({ accessToken });
         });
     }

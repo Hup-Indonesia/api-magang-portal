@@ -32,7 +32,7 @@ if(process.env.ENV_TYPE == 'production'){
 const connectToDatabase = async () => {
   try {
     await sequelize.authenticate();
-    await sequelize.sync();
+    await sequelize.sync({alter:true});
     console.log("Model-model disinkronkan dengan database.");
   } catch (error) {
     console.error("Koneksi database gagal:", error);

@@ -24,12 +24,12 @@ export const Register = async (req: Request, res: Response) => {
             
                 const accessToken = jwt.sign({id: newSeeker.id},
                     process.env.ACCESS_TOKEN_SECRET,
-                    {expiresIn: "15s"} 
+                    {expiresIn: "15m"} 
                 )
 
                 const refreshToken = jwt.sign({id: newSeeker.id},
                     process.env.REFRESH_TOKEN_SECRET,
-                    {expiresIn: "1d"} 
+                    {expiresIn: "3d"} 
                 )
     
                 // sendWelcomeEmail(seekerData.email, seekerData.first_name)
@@ -67,14 +67,14 @@ export const Login = async (req: Request, res: Response) => {
                 id: SEEKER.id
             },
             process.env.ACCESS_TOKEN_SECRET,
-            {expiresIn: "15s"} 
+            {expiresIn: "15m"} 
         )
 
         const refreshToken = jwt.sign({
                 id: SEEKER.id
             },
             process.env.REFRESH_TOKEN_SECRET,
-            {expiresIn: "1d"} 
+            {expiresIn: "3d"} 
         )
 
         res.cookie("refreshToken", refreshToken, {
@@ -82,9 +82,9 @@ export const Login = async (req: Request, res: Response) => {
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
     
-        res.json({accessToken, refreshToken})
+        return res.json({accessToken, refreshToken})
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        return res.status(500).json({ message: error.message });
     }
 };
 
@@ -104,7 +104,7 @@ export const Refresh = async (req: Request, res:Response) => {
                   id: decoded.id
               },
               process.env.ACCESS_TOKEN_SECRET,
-              {expiresIn: "15s"} 
+              {expiresIn: "15m"} 
           )
 
           res.json({accessToken})
