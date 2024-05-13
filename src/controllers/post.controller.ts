@@ -38,10 +38,13 @@ export const getAllPost = async (req: Request, res: Response) => {
         return matchesSearch && matchesLocation && matchesWorkTime && matchesSalary
       })
 
+      const total_page = Math.ceil(await Post.count() / +db_limit);
+      
       return res.status(200).json({
         status_code:200,
         message: "success get app posts",
         page: db_page,
+        total_page: total_page,
         limit: db_limit,
         datas: filtered_data
       })

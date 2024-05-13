@@ -13,6 +13,7 @@ mahasiswaRouter.get("/:id/educations", seeker_controller_1.getEducationsBySeeker
 mahasiswaRouter.get("/:id/attachment", seeker_controller_1.getAttachmentBySeekerId);
 mahasiswaRouter.get("/:id/saved-posts", seeker_controller_1.getAllSavedPostBySeekerId);
 mahasiswaRouter.get("/:id/applied-posts", seeker_controller_1.getAllAppliedPostBySeekerId);
+mahasiswaRouter.post("/check-email", seeker_controller_1.checkEmailIsUsed);
 mahasiswaRouter.post("/:id/experience", seeker_controller_1.addExperience);
 mahasiswaRouter.post("/:id/education", seeker_controller_1.addEducation);
 mahasiswaRouter.post("/:id/attachment", seeker_controller_1.setAttachment);

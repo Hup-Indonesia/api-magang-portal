@@ -8,6 +8,7 @@ const express_1 = __importDefault(require("express"));
 const authRouter = express_1.default.Router();
 authRouter.get("/refresh", auth_controller_1.Refresh);
 authRouter.post("/login", auth_controller_1.Login);
+authRouter.post("/google", auth_controller_1.RegisterLoginWithGoogle);
 authRouter.post("/register", auth_controller_1.Register);
 authRouter.post("/logout", auth_controller_1.Logout);
 exports.default = authRouter;

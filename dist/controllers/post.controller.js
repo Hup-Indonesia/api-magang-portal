@@ -36,10 +36,12 @@ const getAllPost = async (req, res) => {
             const matchesSalary = post.post_thp.toLowerCase().includes(salary.toString().toLowerCase());
             return matchesSearch && matchesLocation && matchesWorkTime && matchesSalary;
         });
+        const total_page = Math.ceil(await Post_1.default.count() / +db_limit);
         return res.status(200).json({
             status_code: 200,
             message: "success get app posts",
             page: db_page,
+            total_page: total_page,
             limit: db_limit,
             datas: filtered_data
         });

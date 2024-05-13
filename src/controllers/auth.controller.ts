@@ -5,6 +5,7 @@ import path from "path";
 import jwt from "jsonwebtoken"
 import transporter from "../config/Mailer"
 import * as dotenv from "dotenv";
+import validator from "validator";
 dotenv.config();
 
 const MAILER_EMAIL = process.env.MAILER_EMAIL
@@ -32,13 +33,70 @@ export const Register = async (req: Request, res: Response) => {
                     {expiresIn: "3d"} 
                 )
     
-                // sendWelcomeEmail(seekerData.email, seekerData.first_name)
+                sendWelcomeEmail(seekerData.email, seekerData.first_name)
                 res.status(201).json({accessToken, refreshToken})
             })
             .catch((error) => {
                 console.error("Gagal membuat pengguna:", error);
                 res.status(500).json({ error: error.message });
             });
+    } catch (error) {
+        console.error("Gagal membuat pengguna:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const RegisterLoginWithGoogle = async (req: Request, res: Response) => {
+    const seekerData = req.body; // Anda akan mendapatkan data pengguna dari permintaan POST
+
+    if(!seekerData.email) return res.status(400).json({message: "Email cannot be empty"})
+    if(!validator.isEmail(seekerData.email)) return res.status(400).json({message: "Email Invalid"})
+
+      try {
+
+        let SEEKER = await Seeker.findOne({where:{
+          email: seekerData.email
+        }})
+
+        if(SEEKER){
+          const accessToken = jwt.sign({
+                  id: SEEKER.id
+              },
+              process.env.ACCESS_TOKEN_SECRET,
+              {expiresIn: "15m"} 
+          )
+
+          const refreshToken = jwt.sign({
+                  id: SEEKER.id
+              },
+              process.env.REFRESH_TOKEN_SECRET,
+              {expiresIn: "3d"} 
+          )
+
+          res.cookie("refreshToken", refreshToken, {
+              httpOnly: true,
+              maxAge: 7 * 24 * 60 * 60 * 1000
+          })
+
+          return res.json({accessToken, refreshToken})
+        }else{
+          seekerData.role = "seeker"
+          let newSeeker = await Seeker.create(seekerData);
+      
+          const accessToken = jwt.sign({id: newSeeker.id},
+              process.env.ACCESS_TOKEN_SECRET,
+              {expiresIn: "15m"} 
+          )
+
+          const refreshToken = jwt.sign({id: newSeeker.id},
+              process.env.REFRESH_TOKEN_SECRET,
+              {expiresIn: "3d"} 
+          )
+
+          sendWelcomeEmail(seekerData.email, seekerData.first_name)
+          return res.status(201).json({accessToken, refreshToken})
+        }
+
     } catch (error) {
         console.error("Gagal membuat pengguna:", error);
         res.status(500).json({ message: error.message });

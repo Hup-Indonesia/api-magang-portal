@@ -26,13 +26,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Logout = exports.Refresh = exports.Login = exports.Register = void 0;
+exports.Logout = exports.Refresh = exports.Login = exports.RegisterLoginWithGoogle = exports.Register = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const Seeker_1 = __importDefault(require("../models/Seeker"));
 const path_1 = __importDefault(require("path"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const Mailer_1 = __importDefault(require("../config/Mailer"));
 const dotenv = __importStar(require("dotenv"));
+const validator_1 = __importDefault(require("validator"));
 dotenv.config();
 const MAILER_EMAIL = process.env.MAILER_EMAIL;
 const MAILER_NAME = process.env.MAILER_NAME;
@@ -48,7 +49,7 @@ const Register = async (req, res) => {
             let newSeeker = await Seeker_1.default.create(seekerData);
             const accessToken = jsonwebtoken_1.default.sign({ id: newSeeker.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
             const refreshToken = jsonwebtoken_1.default.sign({ id: newSeeker.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "3d" });
-            // sendWelcomeEmail(seekerData.email, seekerData.first_name)
+            sendWelcomeEmail(seekerData.email, seekerData.first_name);
             res.status(201).json({ accessToken, refreshToken });
         })
             .catch((error) => {
@@ -62,6 +63,44 @@ const Register = async (req, res) => {
     }
 };
 exports.Register = Register;
+const RegisterLoginWithGoogle = async (req, res) => {
+    const seekerData = req.body; // Anda akan mendapatkan data pengguna dari permintaan POST
+    if (!seekerData.email)
+        return res.status(400).json({ message: "Email cannot be empty" });
+    if (!validator_1.default.isEmail(seekerData.email))
+        return res.status(400).json({ message: "Email Invalid" });
+    try {
+        let SEEKER = await Seeker_1.default.findOne({ where: {
+                email: seekerData.email
+            } });
+        if (SEEKER) {
+            const accessToken = jsonwebtoken_1.default.sign({
+                id: SEEKER.id
+            }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+            const refreshToken = jsonwebtoken_1.default.sign({
+                id: SEEKER.id
+            }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "3d" });
+            res.cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                maxAge: 7 * 24 * 60 * 60 * 1000
+            });
+            return res.json({ accessToken, refreshToken });
+        }
+        else {
+            seekerData.role = "seeker";
+            let newSeeker = await Seeker_1.default.create(seekerData);
+            const accessToken = jsonwebtoken_1.default.sign({ id: newSeeker.id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+            const refreshToken = jsonwebtoken_1.default.sign({ id: newSeeker.id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "3d" });
+            sendWelcomeEmail(seekerData.email, seekerData.first_name);
+            return res.status(201).json({ accessToken, refreshToken });
+        }
+    }
+    catch (error) {
+        console.error("Gagal membuat pengguna:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.RegisterLoginWithGoogle = RegisterLoginWithGoogle;
 const Login = async (req, res) => {
     const { email, password } = req.body; // Anda akan mendapatkan data pengguna dari permintaan POST
     try {

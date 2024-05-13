@@ -16,6 +16,7 @@ import {
   getAllAppliedPostBySeekerId,
   getAttachmentBySeekerId,
   forgetPasswordWithEmail,
+  checkEmailIsUsed,
 } from "../controllers/seeker.controller";
 import express from "express";
 
@@ -29,6 +30,7 @@ mahasiswaRouter.get("/:id/attachment", getAttachmentBySeekerId);
 mahasiswaRouter.get("/:id/saved-posts", getAllSavedPostBySeekerId);
 mahasiswaRouter.get("/:id/applied-posts", getAllAppliedPostBySeekerId);
 
+mahasiswaRouter.post("/check-email", checkEmailIsUsed);
 mahasiswaRouter.post("/:id/experience", addExperience);
 mahasiswaRouter.post("/:id/education", addEducation);
 mahasiswaRouter.post("/:id/attachment", setAttachment);

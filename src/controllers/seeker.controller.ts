@@ -4,7 +4,7 @@ import Experience from "../models/Experience";
 import Education from "../models/Education";
 import response from "./response";
 import * as bcrypt from "bcrypt";
-import { createToken } from "../config/JWT";
+import validator from "validator"
 import Attachment from "../models/Attachment";
 import path from "path";
 import Recruiter from "../models/Recruiter";
@@ -25,11 +25,14 @@ export const getAllSeeker = async (req: Request, res: Response) => {
             attributes: { exclude: ["createdAt", "updatedAt", "password"] },
         });
 
+        const total_page = Math.ceil(await Seeker.count() / +db_limit);
+
         return res.status(200).json({
             status_code: 200,
             message: "success call all seeker",
             limit: db_limit,
             page: db_page,
+            total_page,
             datas: seeker,
         });
     } catch (error) {
@@ -43,73 +46,7 @@ export const getSeekerById = async (req: Request, res: Response) => {
 
     try {
         const mahasiswa = await Seeker.findByPk(seekerId, {
-            attributes: { exclude: ["createdAt", "updatedAt", "password"] },
-            include: [
-                {
-                    model: Experience,
-                    as: "experiences",
-                    attributes: { exclude: ["createdAt", "updatedAt"] },
-                },
-                {
-                    model: Education,
-                    as: "educations",
-                    attributes: { exclude: ["createdAt", "updatedAt"] },
-                },
-                {
-                    model: Attachment,
-                    as: "attachment",
-                    attributes: { exclude: ["createdAt", "updatedAt"] },
-                },
-                {
-                    model: Recruiter,
-                    as: "recruiter",
-                    attributes: { exclude: ["createdAt", "updatedAt"] },
-                },
-                {
-                    model: Post,
-                    as: "applied",
-                    attributes: { exclude: ["createdAt", "updatedAt"] },
-                    include: [
-                        {
-                            model: Recruiter,
-                            as: "recruiter",
-                            attributes: {
-                                exclude: ["createdAt", "updatedAt", "ownerId"],
-                            },
-                            through: { attributes: [] },
-                        },
-                    ],
-                },
-                {
-                    model: Post,
-                    as: "saved",
-                    attributes: { exclude: ["createdAt", "updatedAt"] },
-                    include: [
-                        {
-                            model: Recruiter,
-                            as: "recruiter",
-                            attributes: {
-                                exclude: ["createdAt", "updatedAt", "ownerId"],
-                            },
-                            through: { attributes: [] },
-                        },
-                        {
-                            model: Seeker,
-                            as: "applicants",
-                            attributes: {
-                                exclude: ["createdAt", "updatedAt", "ownerId"],
-                            },
-                        },
-                        {
-                            model: Seeker,
-                            as: "saved",
-                            attributes: {
-                                exclude: ["createdAt", "updatedAt", "ownerId"],
-                            },
-                        },
-                    ],
-                },
-            ],
+            attributes: { exclude: ["createdAt", "updatedAt", "password"] }
         });
 
         if (!mahasiswa)
@@ -128,6 +65,11 @@ export const updateSeeker = async (req: Request, res: Response) => {
 
     try {
         const seeker = await Seeker.findByPk(seekerId);
+
+        if(req.files){
+            updatedSeeker.profile_picture = `${req.protocol + "://" + req.get("host")}/files/uploads/${req.files[0].filename}`
+        }
+        
 
         if (!seeker)
             return res.status(404).json({ message: "seeker not found" });
@@ -585,6 +527,29 @@ export const getAllAppliedPostBySeekerId = async (
         return res.status(500).json({ message: error.message });
     }
 };
+
+
+
+
+
+export const checkEmailIsUsed = async (req: Request,res: Response) => {
+    const emailData = req.body.email
+    try {
+        if(!validator.isEmail(emailData)) return res.status(400).json({message: "Email Invalid"})
+        
+        let SEEKER = await Seeker.findOne({
+            where: {
+                email: emailData
+            }
+        })
+
+        if(SEEKER) return res.status(400).json({message: "Email Already Used"})
+
+        return res.status(200).json({message: "Email Valid"})
+    } catch (error) {
+        return res.status(500).json({message: error.message})
+    }
+}
 
 const MAILER_EMAIL = process.env.MAILER_EMAIL;
 const MAILER_NAME = process.env.MAILER_NAME;

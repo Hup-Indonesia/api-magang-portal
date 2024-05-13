@@ -26,12 +26,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllAppliedPostBySeekerId = exports.addApplied = exports.getAllSavedPostBySeekerId = exports.addSavedPost = exports.addRecruiter = exports.deleteAttachment = exports.setAttachment = exports.getAttachmentBySeekerId = exports.getEducationsBySeekerId = exports.addEducation = exports.addExperience = exports.getExperienceBySeekerId = exports.deleteSeeker = exports.forgetPasswordWithEmail = exports.updateSeeker = exports.getSeekerById = exports.getAllSeeker = void 0;
+exports.checkEmailIsUsed = exports.getAllAppliedPostBySeekerId = exports.addApplied = exports.getAllSavedPostBySeekerId = exports.addSavedPost = exports.addRecruiter = exports.deleteAttachment = exports.setAttachment = exports.getAttachmentBySeekerId = exports.getEducationsBySeekerId = exports.addEducation = exports.addExperience = exports.getExperienceBySeekerId = exports.deleteSeeker = exports.forgetPasswordWithEmail = exports.updateSeeker = exports.getSeekerById = exports.getAllSeeker = void 0;
 const Seeker_1 = __importDefault(require("../models/Seeker"));
 const Experience_1 = __importDefault(require("../models/Experience"));
 const Education_1 = __importDefault(require("../models/Education"));
 const response_1 = __importDefault(require("./response"));
 const bcrypt = __importStar(require("bcrypt"));
+const validator_1 = __importDefault(require("validator"));
 const Attachment_1 = __importDefault(require("../models/Attachment"));
 const path_1 = __importDefault(require("path"));
 const Recruiter_1 = __importDefault(require("../models/Recruiter"));
@@ -49,11 +50,13 @@ const getAllSeeker = async (req, res) => {
             offset: (+db_page - 1) * +db_limit,
             attributes: { exclude: ["createdAt", "updatedAt", "password"] },
         });
+        const total_page = Math.ceil(await Seeker_1.default.count() / +db_limit);
         return res.status(200).json({
             status_code: 200,
             message: "success call all seeker",
             limit: db_limit,
             page: db_page,
+            total_page,
             datas: seeker,
         });
     }
@@ -67,73 +70,7 @@ const getSeekerById = async (req, res) => {
     const seekerId = req.params.id;
     try {
         const mahasiswa = await Seeker_1.default.findByPk(seekerId, {
-            attributes: { exclude: ["createdAt", "updatedAt", "password"] },
-            include: [
-                {
-                    model: Experience_1.default,
-                    as: "experiences",
-                    attributes: { exclude: ["createdAt", "updatedAt"] },
-                },
-                {
-                    model: Education_1.default,
-                    as: "educations",
-                    attributes: { exclude: ["createdAt", "updatedAt"] },
-                },
-                {
-                    model: Attachment_1.default,
-                    as: "attachment",
-                    attributes: { exclude: ["createdAt", "updatedAt"] },
-                },
-                {
-                    model: Recruiter_1.default,
-                    as: "recruiter",
-                    attributes: { exclude: ["createdAt", "updatedAt"] },
-                },
-                {
-                    model: Post_1.default,
-                    as: "applied",
-                    attributes: { exclude: ["createdAt", "updatedAt"] },
-                    include: [
-                        {
-                            model: Recruiter_1.default,
-                            as: "recruiter",
-                            attributes: {
-                                exclude: ["createdAt", "updatedAt", "ownerId"],
-                            },
-                            through: { attributes: [] },
-                        },
-                    ],
-                },
-                {
-                    model: Post_1.default,
-                    as: "saved",
-                    attributes: { exclude: ["createdAt", "updatedAt"] },
-                    include: [
-                        {
-                            model: Recruiter_1.default,
-                            as: "recruiter",
-                            attributes: {
-                                exclude: ["createdAt", "updatedAt", "ownerId"],
-                            },
-                            through: { attributes: [] },
-                        },
-                        {
-                            model: Seeker_1.default,
-                            as: "applicants",
-                            attributes: {
-                                exclude: ["createdAt", "updatedAt", "ownerId"],
-                            },
-                        },
-                        {
-                            model: Seeker_1.default,
-                            as: "saved",
-                            attributes: {
-                                exclude: ["createdAt", "updatedAt", "ownerId"],
-                            },
-                        },
-                    ],
-                },
-            ],
+            attributes: { exclude: ["createdAt", "updatedAt", "password"] }
         });
         if (!mahasiswa)
             return res.status(404).json({ message: "seeker not found" });
@@ -150,6 +87,9 @@ const updateSeeker = async (req, res) => {
     const updatedSeeker = req.body; // Data pembaruan pengguna dari permintaan PUT
     try {
         const seeker = await Seeker_1.default.findByPk(seekerId);
+        if (req.files) {
+            updatedSeeker.profile_picture = `${req.protocol + "://" + req.get("host")}/files/uploads/${req.files[0].filename}`;
+        }
         if (!seeker)
             return res.status(404).json({ message: "seeker not found" });
         if (seeker) {
@@ -537,6 +477,25 @@ const getAllAppliedPostBySeekerId = async (req, res) => {
     }
 };
 exports.getAllAppliedPostBySeekerId = getAllAppliedPostBySeekerId;
+const checkEmailIsUsed = async (req, res) => {
+    const emailData = req.body.email;
+    try {
+        if (!validator_1.default.isEmail(emailData))
+            return res.status(400).json({ message: "Email Invalid" });
+        let SEEKER = await Seeker_1.default.findOne({
+            where: {
+                email: emailData
+            }
+        });
+        if (SEEKER)
+            return res.status(400).json({ message: "Email Already Used" });
+        return res.status(200).json({ message: "Email Valid" });
+    }
+    catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+exports.checkEmailIsUsed = checkEmailIsUsed;
 const MAILER_EMAIL = process.env.MAILER_EMAIL;
 const MAILER_NAME = process.env.MAILER_NAME;
 const sendWelcomeEmail = async (userEmail, userName) => {
